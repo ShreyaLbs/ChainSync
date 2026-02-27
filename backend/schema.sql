@@ -3,9 +3,7 @@
 --  Database Schema (as per schema diagram)
 -- ============================================================
 
-DROP DATABASE IF EXISTS chainsync;
-CREATE DATABASE chainsync;
-USE chainsync;
+
 
 -- ─────────────────────────────────────────────────────────────
 -- TABLE 1: supplier
