@@ -283,6 +283,17 @@ def delete_order(oid):
     conn.commit(); cursor.close(); conn.close()
     return jsonify({'message': 'Order deleted'})
 
+@app.route('/api/fix-orders', methods=['GET'])
+def fix_orders():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT ProductID FROM product LIMIT 1")
+    first_product = cursor.fetchone()
+    pid = first_product['ProductID']
+    cursor.execute("UPDATE orders SET ProductID = %s WHERE ProductID IS NULL OR ProductID = ''", (pid,))
+    conn.commit()
+    cursor.close(); conn.close()
+    return jsonify({'message': f'Orders fixed with ProductID: {pid}'})
 
 # ══════════════════════════════════════════════════════
 #  RUN
