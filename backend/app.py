@@ -287,13 +287,18 @@ def delete_order(oid):
 def fix_orders():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
+    # Add ProductID column if it doesn't exist
+    cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS ProductID VARCHAR(10)")
+    # Get first product
     cursor.execute("SELECT ProductID FROM product LIMIT 1")
     first_product = cursor.fetchone()
     pid = first_product['ProductID']
+    # Update all orders
     cursor.execute("UPDATE orders SET ProductID = %s WHERE ProductID IS NULL OR ProductID = ''", (pid,))
     conn.commit()
     cursor.close(); conn.close()
     return jsonify({'message': f'Orders fixed with ProductID: {pid}'})
+
 
 # ══════════════════════════════════════════════════════
 #  RUN
