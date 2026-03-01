@@ -286,18 +286,20 @@ def delete_order(oid):
 @app.route('/api/fix-orders', methods=['GET'])
 def fix_orders():
     conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute("ALTER TABLE orders ADD COLUMN ProductID VARCHAR(10)")
-    except:
-        pass  # column already exists, ignore
-    cursor.execute("SELECT ProductID FROM product LIMIT 1")
-    first_product = cursor.fetchone()
-    pid = first_product['ProductID']
-    cursor.execute("UPDATE orders SET ProductID = %s", (pid,))
+    cursor = conn.cursor()
+    updates = [
+        ('P001', 'ORD001'),
+        ('P004', 'ORD002'),
+        ('P001', 'ORD003'),
+        ('P003', 'ORD004'),
+        ('P005', 'ORD005'),
+        ('P006', 'ORD006'),
+    ]
+    for pid, oid in updates:
+        cursor.execute("UPDATE orders SET ProductID = %s WHERE OrderID = %s", (pid, oid))
     conn.commit()
     cursor.close(); conn.close()
-    return jsonify({'message': f'Orders fixed with ProductID: {pid}'})
+    return jsonify({'message': 'Orders updated with different products!'})
 
 # ══════════════════════════════════════════════════════
 #  RUN
