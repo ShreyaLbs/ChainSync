@@ -161,7 +161,15 @@ Make sure to set your MySQL connection details in `backend/db.py`.
 - Full-stack integration with React
 - Cloud deployment with Railway and Vercel
 
-> Built with 💜 as a college DBMS project.
+### 🎓 Project Details
+
+| | |
+|--|--|
+| **College** | LBS Institute of Technology for Women, Poojapura |
+| **Year / Semester** | Second Year — 4th Semester |
+| **Team Members** | Sanria Sara Jaison,Sera Jose,Shreya Ajith |
+
+
 
 ---
 
