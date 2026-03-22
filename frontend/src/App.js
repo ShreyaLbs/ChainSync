@@ -1260,6 +1260,7 @@ const Reports = () => {
   );
 };
 
+
 // ══ SQL QUERIES PAGE ══════════════════════════════════════════════════════════
 const SQL_QUERIES = [
   {title:"Top Customers by Revenue",type:"JOIN + GROUP BY + ORDER BY",grad:"#6c3fd5,#e040c8",desc:"Finds total spending per customer by joining orders and customer tables, then grouping and sorting.",
