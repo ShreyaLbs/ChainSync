@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
-const API ="https://chainsync-api.up.railway.app/api";
+const API = "https://chainsync-lgzh.onrender.com/api";
 
 const fontLink = document.createElement("link");
 fontLink.rel = "stylesheet";
