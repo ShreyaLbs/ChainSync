@@ -52,7 +52,6 @@ globalStyle.textContent = `
     border-radius:16px;
     box-shadow:var(--glass-shadow);
   }
-  /* 3D hover card */
   .card-3d {
     transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.4s;
     transform-style: preserve-3d;
@@ -91,8 +90,6 @@ globalStyle.textContent = `
   .prog-fill { height:100%; border-radius:3px; transition:width 1s cubic-bezier(0.22,1,0.36,1); }
   .spinner { width:32px; height:32px; border:3px solid rgba(255,255,255,0.1); border-top-color:#6c3fd5; border-radius:50%; animation:spin 0.8s linear infinite; margin:40px auto; }
   .skeleton { background:linear-gradient(90deg,rgba(255,255,255,0.05) 25%,rgba(255,255,255,0.1) 50%,rgba(255,255,255,0.05) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:10px; }
-
-  /* Recharts custom */
   .recharts-tooltip-wrapper .recharts-default-tooltip {
     background:rgba(20,0,40,0.95) !important;
     border:1px solid rgba(255,255,255,0.15) !important;
@@ -107,13 +104,11 @@ globalStyle.textContent = `
 `;
 document.head.appendChild(globalStyle);
 
-// ── API ───────────────────────────────────────────────────────────────────────
 const apiFetch = (path) => fetch(`${API}${path}`).then(r => r.json());
 const apiPost  = (path, body) => fetch(`${API}${path}`, { method:"POST",  headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) }).then(r => r.json());
 const apiPut   = (path, body) => fetch(`${API}${path}`, { method:"PUT",   headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) }).then(r => r.json());
 const apiDel   = (path)       => fetch(`${API}${path}`, { method:"DELETE" }).then(r => r.json());
 
-// ── UI Helpers ────────────────────────────────────────────────────────────────
 const GlassCard   = ({ children, style:s={}, gradient }) => (
   <div className="glass" style={{ padding:24, position:"relative", overflow:"hidden", ...s }}>
     {gradient && <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,${gradient})`, borderRadius:"16px 16px 0 0" }} />}
@@ -132,7 +127,6 @@ const Label       = ({ children }) => <label style={{ fontSize:11, color:"var(--
 const IdBadge     = ({ id }) => <span style={{ background:"rgba(108,63,213,0.2)", color:"#b794f4", border:"1px solid rgba(108,63,213,0.3)", borderRadius:6, padding:"2px 8px", fontSize:11, fontWeight:600 }}>{id}</span>;
 const Spinner     = () => <div className="spinner" />;
 
-// ── TOAST ─────────────────────────────────────────────────────────────────────
 const _toastRef = { fn: null };
 const showToast = (msg, type = 'success') => _toastRef.fn?.(msg, type);
 const ToastContainer = () => {
@@ -165,7 +159,6 @@ const ToastContainer = () => {
   );
 };
 
-// ── EMPTY STATE ───────────────────────────────────────────────────────────────
 const EmptyState = ({ icon='📭', title='Nothing here', sub='', action, actionLabel='Add one' }) => (
   <div style={{ padding:'56px 20px', textAlign:'center' }}>
     <div style={{ fontSize:44, marginBottom:14, opacity:0.5 }}>{icon}</div>
@@ -175,7 +168,6 @@ const EmptyState = ({ icon='📭', title='Nothing here', sub='', action, actionL
   </div>
 );
 
-// ── PAGE HEADER ───────────────────────────────────────────────────────────────
 const PageHeader = ({ crumb, title, sub, action }) => (
   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:28 }}>
     <div>
@@ -187,7 +179,6 @@ const PageHeader = ({ crumb, title, sub, action }) => (
   </div>
 );
 
-// ── SKELETON ─────────────────────────────────────────────────────────────────
 const SkeletonRow = () => (
   <tr style={{ borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
     {[180,140,110,80,90].map((w,i) => (
@@ -198,7 +189,6 @@ const SkeletonRow = () => (
   </tr>
 );
 const SkeletonCard = ({ h=160 }) => <div className="skeleton" style={{ height:h, borderRadius:16 }} />;
-
 
 const StatCard = ({ label, value, sub, gradient, icon }) => (
   <Card3D gradient={gradient} style={{ padding:22 }}>
@@ -229,7 +219,6 @@ const Modal = ({ title, onClose, children }) => (
   </div>
 );
 
-// Custom tooltip for charts
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -237,6 +226,20 @@ const CustomTooltip = ({ active, payload, label }) => {
       <div style={{ color:"var(--muted)", fontSize:11, marginBottom:4 }}>{label}</div>
       {payload.map((p,i) => <div key={i} style={{ color:p.color, fontSize:13, fontWeight:600 }}>{p.name}: {p.value}</div>)}
     </div>
+  );
+};
+
+// ── Status Badge helper ───────────────────────────────────────────────────────
+const StatusBadge = ({ status }) => {
+  const s = status || "Accepted";
+  const styles = {
+    Accepted: { bg:"rgba(79,209,197,0.15)",  color:"#4fd1c5", border:"1px solid rgba(79,209,197,0.3)"  },
+    Pending:  { bg:"rgba(246,173,85,0.15)",  color:"#f6ad55", border:"1px solid rgba(246,173,85,0.3)"  },
+    Rejected: { bg:"rgba(255,107,107,0.15)", color:"#ff6b6b", border:"1px solid rgba(255,107,107,0.3)" },
+  };
+  const st = styles[s] || styles.Accepted;
+  return (
+    <span style={{ background:st.bg, color:st.color, border:st.border, padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600 }}>{s}</span>
   );
 };
 
@@ -283,8 +286,6 @@ const LandingPage = ({ onEnter }) => {
 
   return (
     <div style={{ minHeight:"100vh", position:"relative", zIndex:1, overflowX:"hidden" }}>
-
-      {/* ── NAV ── */}
       <nav style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"22px 60px", position:"sticky", top:0, zIndex:100, background:"rgba(10,0,21,0.6)", backdropFilter:"blur(24px)", borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           <div style={{ width:42, height:42, background:"linear-gradient(135deg,#6c3fd5,#e040c8)", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, boxShadow:"0 0 24px rgba(108,63,213,0.55)" }}>⬡</div>
@@ -294,11 +295,10 @@ const LandingPage = ({ onEnter }) => {
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <span style={{ fontSize:12, color:"var(--muted)", letterSpacing:2 }}>SUPPLY CHAIN MANAGEMENT</span>
-          <button id="landing-signin-btn" className="btn-primary" onClick={onEnter} style={{ marginLeft:20, padding:"10px 24px", fontSize:14 }}>Sign In →</button>
+          <button className="btn-primary" onClick={onEnter} style={{ marginLeft:20, padding:"10px 24px", fontSize:14 }}>Sign In →</button>
         </div>
       </nav>
 
-      {/* ── HERO ── */}
       <section style={{ textAlign:"center", padding:"110px 24px 80px", maxWidth:900, margin:"0 auto" }} className="fade-up">
         <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"rgba(108,63,213,0.18)", border:"1px solid rgba(108,63,213,0.4)", borderRadius:999, padding:"7px 20px", marginBottom:32, fontSize:12, color:"#b794f4", letterSpacing:1.5 }}>
           <span className="blink" style={{ color:"#4fd1c5" }}>●</span>
@@ -313,11 +313,10 @@ const LandingPage = ({ onEnter }) => {
           ChainSync gives you a unified, real-time view of suppliers, products, warehouses, inventory, customers, and orders — all in one stunning dashboard.
         </p>
         <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap" }}>
-          <button id="hero-get-started-btn" className="btn-primary" onClick={onEnter} style={{ padding:"14px 36px", fontSize:16, borderRadius:14, boxShadow:"0 0 40px rgba(108,63,213,0.5)" }}>Get Started Free →</button>
+          <button className="btn-primary" onClick={onEnter} style={{ padding:"14px 36px", fontSize:16, borderRadius:14, boxShadow:"0 0 40px rgba(108,63,213,0.5)" }}>Get Started Free →</button>
           <button className="btn-ghost" style={{ padding:"14px 28px", fontSize:15, borderRadius:14 }} onClick={() => document.getElementById('features-section').scrollIntoView({behavior:'smooth'})}>Explore Features</button>
         </div>
 
-        {/* Animated stat strip */}
         <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:1, marginTop:72, background:"rgba(255,255,255,0.06)", borderRadius:20, border:"1px solid rgba(255,255,255,0.1)", overflow:"hidden" }}>
           {[
             { label:"Suppliers",  val: count.suppliers,  suffix:"+", sub:"Registered",  icon:"🏭", grad:"#6c3fd5,#e040c8" },
@@ -335,7 +334,6 @@ const LandingPage = ({ onEnter }) => {
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
       <section id="features-section" style={{ padding:"80px 60px", maxWidth:1200, margin:"0 auto" }}>
         <div style={{ textAlign:"center", marginBottom:60 }}>
           <div style={{ fontSize:11, color:"#b794f4", letterSpacing:3, marginBottom:14 }}>EVERYTHING YOU NEED</div>
@@ -354,14 +352,12 @@ const LandingPage = ({ onEnter }) => {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
       <section style={{ padding:"80px 60px", maxWidth:1100, margin:"0 auto" }}>
         <div style={{ textAlign:"center", marginBottom:60 }}>
           <div style={{ fontSize:11, color:"#b794f4", letterSpacing:3, marginBottom:14 }}>SIMPLE WORKFLOW</div>
           <h2 style={{ fontFamily:"var(--font-head)", fontSize:"clamp(28px,4vw,46px)", fontWeight:700 }}>Up and running in minutes</h2>
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:18, position:"relative" }}>
-          {/* connector line */}
           <div style={{ position:"absolute", top:36, left:"12.5%", right:"12.5%", height:1, background:"linear-gradient(90deg,#6c3fd5,#e040c8,#4fd1c5,#f6ad55)", opacity:0.3, zIndex:0 }} />
           {steps.map((s, i) => (
             <div key={s.num} className="glass" style={{ padding:24, position:"relative", zIndex:1, textAlign:"center" }}>
@@ -373,19 +369,17 @@ const LandingPage = ({ onEnter }) => {
         </div>
       </section>
 
-      {/* ── CTA BANNER ── */}
       <section style={{ padding:"60px 60px 100px", maxWidth:900, margin:"0 auto", textAlign:"center" }}>
         <div className="glass" style={{ padding:"60px 40px", borderRadius:28, position:"relative", overflow:"hidden" }}>
           <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:"linear-gradient(90deg,#6c3fd5,#e040c8,#ff6b6b,#4fd1c5)" }} />
           <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 70% 60% at 50% 0%, rgba(108,63,213,0.25) 0%, transparent 70%)", pointerEvents:"none" }} />
           <h2 style={{ fontFamily:"var(--font-head)", fontSize:"clamp(26px,4vw,44px)", fontWeight:700, marginBottom:16 }}>Ready to sync your chain?</h2>
           <p style={{ color:"var(--muted)", fontSize:15, marginBottom:36, maxWidth:480, margin:"0 auto 36px" }}>Log in with your credentials and experience the full power of end-to-end supply chain management.</p>
-          <button id="cta-launch-btn" className="btn-primary" onClick={onEnter} style={{ padding:"15px 44px", fontSize:17, borderRadius:16, boxShadow:"0 0 50px rgba(108,63,213,0.55)" }}>Launch Dashboard →</button>
+          <button className="btn-primary" onClick={onEnter} style={{ padding:"15px 44px", fontSize:17, borderRadius:16, boxShadow:"0 0 50px rgba(108,63,213,0.55)" }}>Launch Dashboard →</button>
           <div style={{ marginTop:18, fontSize:12, color:"var(--muted)" }}>Demo credentials: <span style={{ color:"#b794f4" }}>admin / admin123</span></div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
       <footer style={{ borderTop:"1px solid rgba(255,255,255,0.07)", padding:"28px 60px", display:"flex", justifyContent:"space-between", alignItems:"center", color:"var(--muted)", fontSize:12 }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <div style={{ width:28, height:28, background:"linear-gradient(135deg,#6c3fd5,#e040c8)", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>⬡</div>
@@ -447,11 +441,9 @@ const Dashboard = () => {
   if (loading) return <Spinner />;
   const { s, p, c, o, inv, wh } = all;
   const totalBill = o.reduce((a,x) => a + parseFloat(x.Bill), 0);
-
-  // Low stock alert
   const lowStock = inv.filter(i => i.QuantityAvailable < 50);
+  const pendingOrders = o.filter(x => x.Status === "Pending");
 
-  // Chart data
   const catData = p.reduce((acc,x) => { acc[x.Category]=(acc[x.Category]||0)+1; return acc; }, {});
   const pieData = Object.entries(catData).map(([name,value]) => ({name,value}));
   const pieColors = ["#6c3fd5","#e040c8","#4fd1c5","#f6ad55","#ff6b6b"];
@@ -476,9 +468,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Low stock alert */}
       {lowStock.length > 0 && (
-        <div style={{ background:'rgba(255,107,107,0.1)', border:'1px solid rgba(255,107,107,0.35)', borderRadius:14, padding:'14px 20px', marginBottom:24, display:'flex', alignItems:'center', gap:14 }} className="fade-up">
+        <div style={{ background:'rgba(255,107,107,0.1)', border:'1px solid rgba(255,107,107,0.35)', borderRadius:14, padding:'14px 20px', marginBottom:16, display:'flex', alignItems:'center', gap:14 }} className="fade-up">
           <div style={{ fontSize:22 }}>⚠️</div>
           <div>
             <div style={{ fontWeight:700, fontSize:14, color:'#ff6b6b', marginBottom:3 }}>Low Stock Alert — {lowStock.length} item{lowStock.length>1?'s':''} running low</div>
@@ -487,7 +478,16 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Stat Cards */}
+      {pendingOrders.length > 0 && (
+        <div style={{ background:'rgba(246,173,85,0.1)', border:'1px solid rgba(246,173,85,0.35)', borderRadius:14, padding:'14px 20px', marginBottom:24, display:'flex', alignItems:'center', gap:14 }} className="fade-up">
+          <div style={{ fontSize:22 }}>⏳</div>
+          <div>
+            <div style={{ fontWeight:700, fontSize:14, color:'#f6ad55', marginBottom:3 }}>Pending Requests — {pendingOrders.length} order{pendingOrders.length>1?'s':''} awaiting approval</div>
+            <div style={{ fontSize:12, color:'var(--muted)' }}>Go to Orders page to accept or reject them.</div>
+          </div>
+        </div>
+      )}
+
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16, marginBottom:24 }}>
         <StatCard label="Suppliers"   value={s.length} sub="registered"          gradient="#6c3fd5,#e040c8" icon="🏭" />
         <StatCard label="Products"    value={p.length} sub="in catalog"          gradient="#e040c8,#ff6b6b" icon="📦" />
@@ -495,7 +495,6 @@ const Dashboard = () => {
         <StatCard label="Total Bills" value={`₹${(totalBill/1000).toFixed(0)}K`} sub="across all orders" gradient="#f6ad55,#e040c8" icon="💰" />
       </div>
 
-      {/* Charts row */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
         <GlassCard gradient="#6c3fd5,#4fd1c5">
           <div style={{ fontFamily:"var(--font-head)", fontWeight:600, fontSize:15, marginBottom:18 }}>📊 Inventory Levels</div>
@@ -556,7 +555,10 @@ const Dashboard = () => {
                 <div style={{ fontSize:13, fontWeight:600 }}>{x.OrderID}</div>
                 <div style={{ fontSize:11, color:"var(--muted)", marginTop:2 }}>{x.CustomerID} · {x.OrderDate}</div>
               </div>
-              <span style={{ fontWeight:700, color:"#f6ad55", fontSize:14 }}>₹{parseFloat(x.Bill).toLocaleString()}</span>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <StatusBadge status={x.Status} />
+                <span style={{ fontWeight:700, color:"#f6ad55", fontSize:14 }}>₹{parseFloat(x.Bill).toLocaleString()}</span>
+              </div>
             </div>
           ))}
         </GlassCard>
@@ -572,7 +574,7 @@ const Suppliers = () => {
   const [search, setSearch] = useState("");
   const [modal, setModal]   = useState(null);
   const [form, setForm]     = useState({});
-  const [delTarget, setDelTarget] = useState(null); // {id, name}
+  const [delTarget, setDelTarget] = useState(null);
 
   const load = useCallback(() => { setLoading(true); apiFetch('/suppliers').then(d=>{setData(d);setLoading(false);}); },[]);
   useEffect(()=>{load();},[load]);
@@ -954,7 +956,7 @@ const Customers = () => {
   const [modal, setModal]   = useState(null);
   const [form, setForm]     = useState({});
   const [search, setSearch] = useState("");
-  const [delTarget, setDelTarget] = useState(null); // {id, name}
+  const [delTarget, setDelTarget] = useState(null);
 
   const load = useCallback(() => { setLoading(true); apiFetch('/customers').then(d=>{setData(d);setLoading(false);}); },[]);
   useEffect(()=>{load();},[load]);
@@ -1041,6 +1043,7 @@ const Orders = () => {
   const [modal, setModal]       = useState(null);
   const [form, setForm]         = useState({});
   const [search, setSearch]     = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1050,27 +1053,55 @@ const Orders = () => {
   },[]);
   useEffect(()=>{load();},[load]);
 
-  const blank = { OrderID:"", OrderDate:new Date().toISOString().split("T")[0], Bill:0, CustomerID:"", ProductID:"" };
+  const blank = { OrderID:"", OrderDate:new Date().toISOString().split("T")[0], Bill:0, CustomerID:"", ProductID:"", Status:"Accepted" };
+
+  // ── CHANGE 1: save includes Status ──
   const save = async () => {
     try {
-      if (modal==="add") await apiPost('/orders', form);
-      else await apiPut(`/orders/${form.OrderID}`, form);
+      if (modal==="add") await apiPost('/orders', {...form, Status: form.Status||"Accepted"});
+      else await apiPut(`/orders/${form.OrderID}`, {...form, Status: form.Status||"Accepted"});
       showToast(modal==="add" ? `Order "${form.OrderID}" placed!` : `Order updated.`);
       setModal(null); load();
     } catch { showToast('Failed to save order.', 'error'); }
   };
+
+  const updateStatus = async (oid, status) => {
+    const order = data.find(o => o.OrderID === oid);
+    await apiPut(`/orders/${oid}`, {...order, Status: status});
+    showToast(`Order ${oid} ${status}!`);
+    load();
+  };
+
   const filtered = data.filter(o => {
     const c = customers.find(x=>x.CustomerID===o.CustomerID);
-    return c?.CustomerName.toLowerCase().includes(search.toLowerCase()) || o.OrderID.includes(search);
+    const matchSearch = c?.CustomerName.toLowerCase().includes(search.toLowerCase()) || o.OrderID.includes(search);
+    const matchStatus = statusFilter === "All" || (o.Status||"Accepted") === statusFilter;
+    return matchSearch && matchStatus;
   });
+
+  const pendingCount = data.filter(o => o.Status === "Pending").length;
   const addBtn = <button className="btn-primary" onClick={()=>{setForm({...blank, CustomerID:customers[0]?.CustomerID||"", ProductID:products[0]?.ProductID||""});setModal("add");}}>+ New Order</button>;
 
   return (
     <div className="fade-up">
-      <PageHeader crumb="ORDERS" title="Orders" sub={`${data.length} total orders`} action={addBtn} />
+      <PageHeader crumb="ORDERS" title="Orders" sub={`${data.length} total orders${pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`} action={addBtn} />
+
+      {/* Status filter tabs */}
+      <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+        {["All","Accepted","Pending","Rejected"].map(f => (
+          <button key={f} onClick={()=>setStatusFilter(f)}
+            className={statusFilter===f ? "btn-primary" : "btn-ghost"}
+            style={{ padding:"7px 16px", fontSize:13 }}>
+            {f}
+            {f==="Pending" && pendingCount > 0 && <span style={{ marginLeft:6, background:"rgba(255,107,107,0.3)", borderRadius:10, padding:"1px 6px", fontSize:11 }}>{pendingCount}</span>}
+          </button>
+        ))}
+      </div>
+
       <GlassCard style={{ marginBottom:16, padding:16 }}>
         <GlassInput placeholder="🔍  Search by customer or order ID..." value={search} onChange={e=>setSearch(e.target.value)} />
       </GlassCard>
+
       {loading ? (
         <GlassCard style={{ padding:0, overflow:"hidden" }}><table style={{ width:'100%', borderCollapse:'collapse' }}><tbody>{[1,2,3].map(i=><SkeletonRow key={i}/>)}</tbody></table></GlassCard>
       ) : filtered.length === 0 ? (
@@ -1078,7 +1109,8 @@ const Orders = () => {
       ) : (
         <GlassCard style={{ padding:0, overflow:"hidden" }}>
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
-            <TableHeader cols={["OrderID","Date","Bill","Customer","Product","Actions"]} />
+            {/* ── CHANGE 2: Status column added ── */}
+            <TableHeader cols={["OrderID","Date","Bill","Customer","Product","Status","Actions"]} />
             <tbody>
               {filtered.map(o => {
                 const cust = customers.find(c=>c.CustomerID===o.CustomerID);
@@ -1094,11 +1126,22 @@ const Orders = () => {
                         {prod?.ProductName||o.ProductID||"—"}
                       </span>
                     </td>
+                    {/* ── CHANGE 3: Status badge column ── */}
                     <td style={{ padding:"13px 16px" }}>
-                      <div style={{ display:"flex", gap:8 }}>
-                        <button className="btn-ghost" onClick={()=>{setForm({...o});setModal("edit");}} style={{ padding:"5px 12px", fontSize:12 }}>Edit</button>
-                        <button className="btn-danger" onClick={async()=>{await apiDel(`/orders/${o.OrderID}`);load();}} style={{ padding:"5px 12px", fontSize:12 }}>Del</button>
-                      </div>
+                      <StatusBadge status={o.Status} />
+                    </td>
+                    <td style={{ padding:"13px 16px" }}>
+                      {(o.Status === "Pending" || !o.Status) ? (
+                        <div style={{ display:"flex", gap:6 }}>
+                          <button onClick={()=>updateStatus(o.OrderID,"Accepted")} style={{ background:"rgba(79,209,197,0.15)", border:"1px solid rgba(79,209,197,0.3)", color:"#4fd1c5", cursor:"pointer", borderRadius:8, fontSize:12, padding:"5px 10px", fontFamily:"var(--font-body)" }}>✓ Accept</button>
+                          <button onClick={()=>updateStatus(o.OrderID,"Rejected")} className="btn-danger" style={{ padding:"5px 10px", fontSize:12 }}>✗ Reject</button>
+                        </div>
+                      ) : (
+                        <div style={{ display:"flex", gap:8 }}>
+                          <button className="btn-ghost" onClick={()=>{setForm({...o});setModal("edit");}} style={{ padding:"5px 12px", fontSize:12 }}>Edit</button>
+                          <button className="btn-danger" onClick={async()=>{await apiDel(`/orders/${o.OrderID}`);load();}} style={{ padding:"5px 12px", fontSize:12 }}>Del</button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -1107,6 +1150,7 @@ const Orders = () => {
           </table>
         </GlassCard>
       )}
+
       {modal && (
         <Modal title={modal==="add"?"New Order":"Edit Order"} onClose={()=>setModal(null)}>
           <div style={{ display:"grid", gap:14 }}>
@@ -1128,6 +1172,14 @@ const Orders = () => {
             </div>
             <div><Label>ORDER DATE</Label><GlassInput type="date" value={form.OrderDate||""} onChange={e=>setForm({...form,OrderDate:e.target.value})} /></div>
             <div><Label>BILL (₹)</Label><GlassInput type="number" value={form.Bill||0} onChange={e=>setForm({...form,Bill:+e.target.value})} /></div>
+            {/* ── CHANGE 4: Status dropdown in modal ── */}
+            <div><Label>STATUS</Label>
+              <GlassSelect value={form.Status||"Accepted"} onChange={e=>setForm({...form,Status:e.target.value})} style={{width:"100%"}}>
+                <option value="Accepted">Accepted</option>
+                <option value="Pending">Pending</option>
+                <option value="Rejected">Rejected</option>
+              </GlassSelect>
+            </div>
             <div style={{ display:"flex", gap:10, marginTop:4 }}>
               <button className="btn-primary" onClick={save}>Save Order</button>
               <button className="btn-ghost" onClick={()=>setModal(null)}>Cancel</button>
@@ -1222,10 +1274,10 @@ const SQL_QUERIES = [
    sql:`SELECT w.WarehouseName, w.Location, w.Capacity,\n       SUM(i.QuantityAvailable)                          AS TotalStock,\n       ROUND(SUM(i.QuantityAvailable)*100.0/w.Capacity,1) AS UtilizationPct\nFROM warehouse w\nJOIN inventory i ON w.WarehouseID = i.WarehouseID\nGROUP BY w.WarehouseID, w.WarehouseName, w.Location, w.Capacity\nORDER BY UtilizationPct DESC;`},
   {title:"Low Stock Alert",type:"JOIN + WHERE Filter",grad:"#ff6b6b,#f6ad55",desc:"Identifies inventory items running critically low by filtering on a quantity threshold.",
    sql:`SELECT p.ProductName, p.Category,\n       i.QuantityAvailable,\n       w.WarehouseName\nFROM inventory i\nJOIN product   p ON i.ProductID   = p.ProductID\nJOIN warehouse w ON i.WarehouseID = w.WarehouseID\nWHERE i.QuantityAvailable < 50\nORDER BY i.QuantityAvailable ASC;`},
-  {title:"Revenue by Product Category",type:"JOIN + GROUP BY + SUM + AVG",grad:"#f6ad55,#e040c8",desc:"Aggregates total and average revenue grouped by category to reveal top-earning product lines.",
-   sql:`SELECT p.Category,\n       COUNT(o.OrderID) AS OrderCount,\n       SUM(o.Bill)      AS TotalRevenue,\n       AVG(o.Bill)      AS AvgOrderValue\nFROM product p\nJOIN orders o ON p.ProductID = o.ProductID\nGROUP BY p.Category\nORDER BY TotalRevenue DESC;`},
+  {title:"Pending Orders",type:"WHERE Filter",grad:"#f6ad55,#e040c8",desc:"Finds all orders that are still pending approval from the admin.",
+   sql:`SELECT o.OrderID, o.OrderDate, o.Bill,\n       c.CustomerName,\n       p.ProductName\nFROM orders o\nJOIN customer c ON o.CustomerID = c.CustomerID\nJOIN product  p ON o.ProductID  = p.ProductID\nWHERE o.Status = 'Pending'\nORDER BY o.OrderDate DESC;`},
   {title:"Full Supply Chain Trace",type:"4-Table JOIN",grad:"#6c3fd5,#4fd1c5",desc:"Traces an order end-to-end: customer → product → supplier across four tables.",
-   sql:`SELECT o.OrderID, o.OrderDate, o.Bill,\n       c.CustomerName,\n       p.ProductName, p.Category,\n       s.SupplierName\nFROM orders o\nJOIN customer c ON o.CustomerID = c.CustomerID\nJOIN product  p ON o.ProductID  = p.ProductID\nJOIN supplier s ON p.SupplierID = s.SupplierID\nORDER BY o.OrderDate DESC;`},
+   sql:`SELECT o.OrderID, o.OrderDate, o.Bill, o.Status,\n       c.CustomerName,\n       p.ProductName, p.Category,\n       s.SupplierName\nFROM orders o\nJOIN customer c ON o.CustomerID = c.CustomerID\nJOIN product  p ON o.ProductID  = p.ProductID\nJOIN supplier s ON p.SupplierID = s.SupplierID\nORDER BY o.OrderDate DESC;`},
 ];
 const KW=['SELECT','FROM','JOIN','ON','WHERE','GROUP BY','ORDER BY','HAVING','COUNT','SUM','AVG','MAX','MIN','ROUND','AS','AND','OR','LEFT','INNER','DESC','ASC','LIMIT'];
 const SQLLine=({line})=>{
@@ -1280,8 +1332,18 @@ const NAV = [
 const PAGES = { dashboard:Dashboard, suppliers:Suppliers, products:Products, warehouses:Warehouses, inventory:Inventory, customers:Customers, orders:Orders, reports:Reports, sql:SQLQueries };
 
 export default function App() {
-  const [screen, setScreen] = useState("landing"); // "landing" | "login" | "app"
+  const [screen, setScreen] = useState("landing");
   const [page, setPage]     = useState("dashboard");
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (screen === "app") {
+      apiFetch('/orders').then(orders => {
+        setPendingCount(orders.filter(o => o.Status === "Pending").length);
+      });
+    }
+  }, [screen, page]);
+
   const Bg = () => <><div className="mesh-bg"/><div className="orb orb1"/><div className="orb orb2"/><div className="orb orb3"/></>;
   if (screen === "landing") return <><Bg/><LandingPage onEnter={() => setScreen("login")}/></>;
   if (screen === "login")   return <><Bg/><LoginPage   onLogin={() => setScreen("app")}/></>;
@@ -1291,7 +1353,6 @@ export default function App() {
       <ToastContainer />
       <Bg/>
       <div style={{ display:"flex", minHeight:"100vh", position:"relative", zIndex:1 }}>
-        {/* Sidebar */}
         <div className="glass" style={{ width:230, borderRadius:0, borderTop:"none", borderLeft:"none", borderBottom:"none", display:"flex", flexDirection:"column", position:"fixed", height:"100vh", left:0, top:0, backdropFilter:"blur(30px)", zIndex:10 }}>
           <div style={{ padding:"28px 22px 22px", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
             <div style={{ display:"flex", alignItems:"center", gap:12 }}>
@@ -1306,8 +1367,12 @@ export default function App() {
             <div style={{ fontSize:10, color:"var(--muted)", letterSpacing:2, padding:"0 10px", marginBottom:10 }}>NAVIGATION</div>
             {NAV.map(n => (
               <button key={n.id} onClick={()=>setPage(n.id)} className={`nav-item ${page===n.id?"active":""}`}>
-                <span style={{ fontSize:16 }}>{n.icon}</span><span>{n.label}</span>
-                {page===n.id && <span style={{ marginLeft:"auto", background:"linear-gradient(135deg,#6c3fd5,#e040c8)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", fontWeight:700 }}>›</span>}
+                <span style={{ fontSize:16 }}>{n.icon}</span>
+                <span>{n.label}</span>
+                {n.id === "orders" && pendingCount > 0 && (
+                  <span style={{ marginLeft:"auto", background:"#ef4444", borderRadius:10, padding:"1px 7px", fontSize:11, color:"#fff" }}>{pendingCount}</span>
+                )}
+                {page===n.id && n.id !== "orders" && <span style={{ marginLeft:"auto", background:"linear-gradient(135deg,#6c3fd5,#e040c8)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", fontWeight:700 }}>›</span>}
               </button>
             ))}
           </nav>
@@ -1317,7 +1382,6 @@ export default function App() {
             <button onClick={()=>setScreen("landing")} style={{ marginLeft:"auto", background:"rgba(255,107,107,0.1)", border:"1px solid rgba(255,107,107,0.2)", color:"#ff6b6b", cursor:"pointer", borderRadius:8, width:30, height:30, fontSize:14, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>⏻</button>
           </div>
         </div>
-        {/* Main */}
         <div style={{ marginLeft:230, flex:1, padding:36, maxWidth:"calc(100vw - 230px)", minHeight:"100vh" }}>
           <Page key={page}/>
         </div>
