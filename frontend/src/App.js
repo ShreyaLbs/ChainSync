@@ -1080,8 +1080,6 @@ const Orders = () => {
 
   const pendingCount = data.filter(o => o.Status === "Pending").length;
 
-  // ── CHANGE 1: addBtn variable removed ──
-
   return (
     <div className="fade-up">
       <PageHeader crumb="ORDERS" title="Orders" sub={`${data.length} total orders${pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`} action={null} />
@@ -1258,7 +1256,6 @@ const Reports = () => {
     </div>
   );
 };
-
 
 // ══ SQL QUERIES PAGE ══════════════════════════════════════════════════════════
 const SQL_QUERIES = [
