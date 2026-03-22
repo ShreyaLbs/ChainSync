@@ -579,7 +579,6 @@ const Suppliers = () => {
   const load = useCallback(() => { setLoading(true); apiFetch('/suppliers').then(d=>{setData(d);setLoading(false);}); },[]);
   useEffect(()=>{load();},[load]);
 
-  const blank = { SupplierID:"", SupplierName:"", ContactNumber:"", Location:"" };
   const save = async () => {
     try {
       if (modal==="add") await apiPost('/suppliers', form);
@@ -671,7 +670,6 @@ const Products = () => {
   },[]);
   useEffect(()=>{load();},[load]);
 
-  const blank = { ProductID:"", ProductName:"", Category:"Machinery", UnitPrice:0, SupplierID:"" };
   const save = async () => {
     try {
       if (modal==="add") await apiPost('/products', form);
@@ -763,7 +761,6 @@ const Warehouses = () => {
   },[]);
   useEffect(()=>{load();},[load]);
 
-  const blank = { WarehouseID:"", WarehouseName:"", Location:"", Capacity:5000 };
   const save = async () => {
     try {
       if (modal==="add") await apiPost('/warehouses', form);
@@ -858,7 +855,6 @@ const Inventory = () => {
   },[]);
   useEffect(()=>{load();},[load]);
 
-  const blank = { InventoryID:"", QuantityAvailable:0, ProductID:"", WarehouseID:"" };
   const save = async () => {
     try {
       if (modal==="add") await apiPost('/inventory', form);
@@ -961,7 +957,6 @@ const Customers = () => {
   const load = useCallback(() => { setLoading(true); apiFetch('/customers').then(d=>{setData(d);setLoading(false);}); },[]);
   useEffect(()=>{load();},[load]);
 
-  const blank = { CustomerID:"", CustomerName:"", ContactNumber:"", Address:"" };
   const save = async () => {
     try {
       if (modal==="add") await apiPost('/customers', form);
@@ -1053,7 +1048,6 @@ const Orders = () => {
   },[]);
   useEffect(()=>{load();},[load]);
 
-  const blank = { OrderID:"", OrderDate:new Date().toISOString().split("T")[0], Bill:0, CustomerID:"", ProductID:"", Status:"Accepted" };
 
   const save = async () => {
     try {
