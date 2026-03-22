@@ -1055,6 +1055,7 @@ const Orders = () => {
 
   const blank = { OrderID:"", OrderDate:new Date().toISOString().split("T")[0], Bill:0, CustomerID:"", ProductID:"", Status:"Accepted" };
 
+  // ── CHANGE 1: save includes Status ──
   const save = async () => {
     try {
       if (modal==="add") await apiPost('/orders', {...form, Status: form.Status||"Accepted"});
@@ -1079,10 +1080,11 @@ const Orders = () => {
   });
 
   const pendingCount = data.filter(o => o.Status === "Pending").length;
+  const addBtn = <button className="btn-primary" onClick={()=>{setForm({...blank, CustomerID:customers[0]?.CustomerID||"", ProductID:products[0]?.ProductID||""});setModal("add");}}>+ New Order</button>;
 
   return (
     <div className="fade-up">
-      <PageHeader crumb="ORDERS" title="Orders" sub={`${data.length} total orders${pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`} action={null} />
+      <PageHeader crumb="ORDERS" title="Orders" sub={`${data.length} total orders${pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`} action={addBtn} />
 
       {/* Status filter tabs */}
       <div style={{ display:"flex", gap:8, marginBottom:16 }}>
@@ -1103,10 +1105,11 @@ const Orders = () => {
       {loading ? (
         <GlassCard style={{ padding:0, overflow:"hidden" }}><table style={{ width:'100%', borderCollapse:'collapse' }}><tbody>{[1,2,3].map(i=><SkeletonRow key={i}/>)}</tbody></table></GlassCard>
       ) : filtered.length === 0 ? (
-        <GlassCard style={{ padding:0 }}><EmptyState icon="🛒" title={search ? 'No orders match your search' : 'No orders yet'} sub={search ? 'Try a different keyword.' : 'Orders placed by customers will appear here.'} action={null} /></GlassCard>
+        <GlassCard style={{ padding:0 }}><EmptyState icon="🛒" title={search ? 'No orders match your search' : 'No orders yet'} sub={search ? 'Try a different keyword.' : 'Place your first order to get started.'} action={search ? null : ()=>{setForm({...blank,CustomerID:customers[0]?.CustomerID||'',ProductID:products[0]?.ProductID||''});setModal('add');}} actionLabel="+ New Order" /></GlassCard>
       ) : (
         <GlassCard style={{ padding:0, overflow:"hidden" }}>
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+            {/* ── CHANGE 2: Status column added ── */}
             <TableHeader cols={["OrderID","Date","Bill","Customer","Product","Status","Actions"]} />
             <tbody>
               {filtered.map(o => {
@@ -1123,6 +1126,7 @@ const Orders = () => {
                         {prod?.ProductName||o.ProductID||"—"}
                       </span>
                     </td>
+                    {/* ── CHANGE 3: Status badge column ── */}
                     <td style={{ padding:"13px 16px" }}>
                       <StatusBadge status={o.Status} />
                     </td>
@@ -1148,8 +1152,9 @@ const Orders = () => {
       )}
 
       {modal && (
-        <Modal title="Edit Order" onClose={()=>setModal(null)}>
+        <Modal title={modal==="add"?"New Order":"Edit Order"} onClose={()=>setModal(null)}>
           <div style={{ display:"grid", gap:14 }}>
+            {modal==="add" && <div><Label>ORDER ID</Label><GlassInput value={form.OrderID||""} onChange={e=>setForm({...form,OrderID:e.target.value})} placeholder="e.g. ORD007" /></div>}
             <div><Label>CUSTOMER</Label>
               <GlassSelect value={form.CustomerID} onChange={e=>setForm({...form,CustomerID:e.target.value})} style={{width:"100%"}}>
                 {customers.map(c=><option key={c.CustomerID} value={c.CustomerID}>{c.CustomerName}</option>)}
@@ -1163,9 +1168,11 @@ const Orders = () => {
               }} style={{width:"100%"}}>
                 {products.map(p=><option key={p.ProductID} value={p.ProductID}>{p.ProductName}</option>)}
               </GlassSelect>
+              {form.ProductID && <div style={{fontSize:11,color:'#4fd1c5',marginTop:5}}>💡 Bill auto-filled from unit price — adjust below if needed.</div>}
             </div>
             <div><Label>ORDER DATE</Label><GlassInput type="date" value={form.OrderDate||""} onChange={e=>setForm({...form,OrderDate:e.target.value})} /></div>
             <div><Label>BILL (₹)</Label><GlassInput type="number" value={form.Bill||0} onChange={e=>setForm({...form,Bill:+e.target.value})} /></div>
+            {/* ── CHANGE 4: Status dropdown in modal ── */}
             <div><Label>STATUS</Label>
               <GlassSelect value={form.Status||"Accepted"} onChange={e=>setForm({...form,Status:e.target.value})} style={{width:"100%"}}>
                 <option value="Accepted">Accepted</option>
