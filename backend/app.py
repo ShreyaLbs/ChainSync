@@ -3,7 +3,7 @@ from flask_cors import CORS
 from db import get_connection
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["https://chain-sync-nine.vercel.app", "https://chain-sync-git-main-shreya-ajiths-projects.vercel.app", "http://localhost:3000"])
 
 # ══════════════════════════════════════════════════════
 #  SUPPLIER
