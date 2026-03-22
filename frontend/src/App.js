@@ -1084,7 +1084,6 @@ const Orders = () => {
 
   return (
     <div className="fade-up">
-      {/* ── CHANGE 2: action={null} — no + New Order button ── */}
       <PageHeader crumb="ORDERS" title="Orders" sub={`${data.length} total orders${pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`} action={null} />
 
       {/* Status filter tabs */}
