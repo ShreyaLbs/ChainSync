@@ -7,5 +7,7 @@ def get_connection():
         port=int(os.environ.get("DB_PORT", 3306)),
         user=os.environ.get("DB_USER"),
         password=os.environ.get("DB_PASSWORD"),
-        database=os.environ.get("DB_NAME")
+        database=os.environ.get("DB_NAME"),
+        connection_timeout=30,
+        ssl_disabled=True
     )
