@@ -1106,7 +1106,6 @@ const Orders = () => {
       {loading ? (
         <GlassCard style={{ padding:0, overflow:"hidden" }}><table style={{ width:'100%', borderCollapse:'collapse' }}><tbody>{[1,2,3].map(i=><SkeletonRow key={i}/>)}</tbody></table></GlassCard>
       ) : filtered.length === 0 ? (
-        {/* ── CHANGE 3: no action button on empty state ── */}
         <GlassCard style={{ padding:0 }}><EmptyState icon="🛒" title={search ? 'No orders match your search' : 'No orders yet'} sub={search ? 'Try a different keyword.' : 'Orders placed by customers will appear here.'} action={null} /></GlassCard>
       ) : (
         <GlassCard style={{ padding:0, overflow:"hidden" }}>
