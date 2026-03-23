@@ -62,17 +62,21 @@ CREATE TABLE customer (
     ContactNumber   VARCHAR(20),
     Address         VARCHAR(200)
 );
+-- ─────────────────────────────────────────────────────────────
+-- TABLE 6: orders 
+-- ─────────────────────────────────────────────────────────────
 
--- ─────────────────────────────────────────────────────────────
--- TABLE 6: orders
--- ─────────────────────────────────────────────────────────────
 CREATE TABLE orders (
     OrderID         VARCHAR(10)     PRIMARY KEY,
     OrderDate       DATE            NOT NULL,
     Bill            DECIMAL(10,2)   NOT NULL,
     CustomerID      VARCHAR(10)     NOT NULL,
+    Status          VARCHAR(20)     DEFAULT 'Pending',
+    ProductID       VARCHAR(10),
     FOREIGN KEY (CustomerID) REFERENCES customer(CustomerID)
-        ON DELETE CASCADE ON UPDATE CASCADE
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (ProductID) REFERENCES product(ProductID)
+        ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- ============================================================
