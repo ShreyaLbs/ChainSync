@@ -481,7 +481,6 @@ const CustomerPortal = ({ onBack }) => {
   const loadOrders = (cid) => {
     setLoadingOrders(true);
     Promise.all([apiFetch('/orders'), apiFetch('/products')]).then(([orders, prods]) => {
-      setAllOrders(prods);
       const mine = orders.filter(o => o.CustomerID === (cid || customer?.CustomerID));
       const enriched = mine.map(o => ({ ...o, productName: prods.find(p => p.ProductID === o.ProductID)?.ProductName || o.ProductID }));
       setMyOrders(enriched.reverse());
