@@ -447,7 +447,6 @@ const CustomerPortal = ({ onBack }) => {
   const [tab, setTab]         = useState("products"); // products | orders
   const [products, setProducts]     = useState([]);
   const [myOrders, setMyOrders]     = useState([]);
-  const [allOrders, setAllOrders]   = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [loadingOrders, setLoadingOrders]     = useState(false);
   const [requesting, setRequesting]           = useState(null);
