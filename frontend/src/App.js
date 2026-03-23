@@ -86,6 +86,8 @@ globalStyle.textContent = `
   .btn-ghost:hover { background:rgba(255,255,255,0.12); color:var(--text); }
   .btn-danger { background:rgba(255,107,107,0.15); border:1px solid rgba(255,107,107,0.3); border-radius:10px; color:#ff6b6b; font-family:var(--font-body); font-size:13px; font-weight:500; padding:8px 16px; cursor:pointer; transition:all 0.2s; }
   .btn-danger:hover { background:rgba(255,107,107,0.25); }
+  .btn-teal { background:rgba(79,209,197,0.15); border:1px solid rgba(79,209,197,0.3); border-radius:10px; color:#4fd1c5; font-family:var(--font-body); font-size:14px; font-weight:600; padding:10px 20px; cursor:pointer; transition:all 0.2s; }
+  .btn-teal:hover { background:rgba(79,209,197,0.25); transform:translateY(-1px); }
   .prog-bar { height:6px; border-radius:3px; background:rgba(255,255,255,0.1); overflow:hidden; }
   .prog-fill { height:100%; border-radius:3px; transition:width 1s cubic-bezier(0.22,1,0.36,1); }
   .spinner { width:32px; height:32px; border:3px solid rgba(255,255,255,0.1); border-top-color:#6c3fd5; border-radius:50%; animation:spin 0.8s linear infinite; margin:40px auto; }
@@ -229,7 +231,6 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-// ── Status Badge helper ───────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => {
   const s = status || "Accepted";
   const styles = {
@@ -240,180 +241,6 @@ const StatusBadge = ({ status }) => {
   const st = styles[s] || styles.Accepted;
   return (
     <span style={{ background:st.bg, color:st.color, border:st.border, padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600 }}>{s}</span>
-  );
-};
-// ══ CUSTOMER PORTAL ═══════════════════════════════════════════════════════════
-const CustomerPortal = ({ onLogout }) => {
-  const [customer, setCustomer] = useState(null);
-  const [customerId, setCustomerId] = useState("");
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [tab, setTab] = useState("browse");
-  const [requesting, setRequesting] = useState(null);
- 
-  const handleLogin = async () => {
-    if (!customerId.trim()) { setErr("Please enter your Customer ID"); return; }
-    setLoading(true);
-    setErr("");
-    try {
-      const customers = await apiFetch('/customers');
-      const found = customers.find(c => c.CustomerID.toLowerCase() === customerId.trim().toLowerCase());
-      if (found) {
-        setCustomer(found);
-        const [prods, ords] = await Promise.all([apiFetch('/products'), apiFetch('/orders')]);
-        setProducts(prods);
-        setOrders(ords.filter(o => o.CustomerID === found.CustomerID));
-      } else {
-        setErr("Customer ID not found. Try C001, C002, C003...");
-      }
-    } catch {
-      setErr("Connection error. Please try again.");
-    }
-    setLoading(false);
-  };
- 
-  const handleRequest = async (product) => {
-    setRequesting(product.ProductID);
-    try {
-      const allOrders = await apiFetch('/orders');
-      const newId = "ORD" + String(allOrders.length + 1).padStart(3, "0");
-      await apiPost('/orders', {
-        OrderID: newId,
-        OrderDate: new Date().toISOString().split("T")[0],
-        Bill: parseFloat(product.UnitPrice),
-        CustomerID: customer.CustomerID,
-        ProductID: product.ProductID,
-        Status: "Pending"
-      });
-      showToast(`Request for "${product.ProductName}" sent to admin!`);
-      const updatedOrders = await apiFetch('/orders');
-      setOrders(updatedOrders.filter(o => o.CustomerID === customer.CustomerID));
-      setTab("orders");
-    } catch {
-      showToast("Failed to send request.", "error");
-    }
-    setRequesting(null);
-  };
- 
-  const refreshOrders = async () => {
-    if (!customer) return;
-    const updatedOrders = await apiFetch('/orders');
-    setOrders(updatedOrders.filter(o => o.CustomerID === customer.CustomerID));
-  };
- 
-  const catGrad = { Machinery:"#6c3fd5,#4fd1c5", "Raw Materials":"#4fd1c5,#6c3fd5", Components:"#e040c8,#6c3fd5", Packaging:"#f6ad55,#e040c8" };
- 
-  if (!customer) {
-    return (
-      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", zIndex:1 }}>
-        <div className="fade-up" style={{ width:420 }}>
-          <div style={{ textAlign:"center", marginBottom:36 }}>
-            <div style={{ width:72, height:72, margin:"0 auto 16px", background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)", borderRadius:20, display:"flex", alignItems:"center", justifyContent:"center", fontSize:34, boxShadow:"0 0 40px rgba(79,209,197,0.5)" }}>🛒</div>
-            <div style={{ fontFamily:"var(--font-head)", fontSize:32, fontWeight:700, letterSpacing:-1 }}>Customer<span style={{ background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}> Portal</span></div>
-            <div style={{ color:"var(--muted)", fontSize:12, letterSpacing:3, marginTop:4 }}>CHAINSYNC · REQUEST PRODUCTS</div>
-          </div>
-          <div className="glass" style={{ padding:32, borderRadius:24, position:"relative" }}>
-            <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(90deg,#4fd1c5,#6c3fd5,#e040c8)", borderRadius:"24px 24px 0 0" }} />
-            <div style={{ marginBottom:22 }}>
-              <Label>CUSTOMER ID</Label>
-              <GlassInput placeholder="e.g. C001, C002, C003..." value={customerId} onChange={e => setCustomerId(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
-              <div style={{ fontSize:11, color:"var(--muted)", marginTop:6 }}>Enter your Customer ID to access the portal</div>
-            </div>
-            {err && <div style={{ background:"rgba(255,107,107,0.12)", border:"1px solid rgba(255,107,107,0.25)", borderRadius:10, padding:"10px 14px", color:"#ff6b6b", fontSize:13, marginBottom:16 }}>{err}</div>}
-            <button className="btn-primary" onClick={handleLogin} style={{ width:"100%", padding:"13px", fontSize:15, borderRadius:12, background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)" }}>
-              {loading ? "Signing in..." : "Access Portal →"}
-            </button>
-            <button onClick={onLogout} style={{ width:"100%", marginTop:12, background:"transparent", border:"none", color:"var(--muted)", fontSize:13, cursor:"pointer", fontFamily:"var(--font-body)" }}>← Back to Login</button>
-            <div style={{ textAlign:"center", marginTop:14, color:"var(--muted)", fontSize:12 }}>Try: C001, C002, C003, C004, or C005</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
- 
-  return (
-    <div style={{ minHeight:"100vh", position:"relative", zIndex:1 }}>
-      <div style={{ background:"rgba(10,0,21,0.8)", backdropFilter:"blur(24px)", borderBottom:"1px solid rgba(255,255,255,0.08)", padding:"16px 32px", display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, zIndex:100 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-          <div style={{ width:38, height:38, background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)", borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🛒</div>
-          <div>
-            <div style={{ fontFamily:"var(--font-head)", fontSize:16, fontWeight:700 }}>Customer Portal</div>
-            <div style={{ fontSize:11, color:"var(--muted)" }}>Welcome, {customer.CustomerName}</div>
-          </div>
-        </div>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <IdBadge id={customer.CustomerID} />
-          <button onClick={() => { setCustomer(null); setCustomerId(""); }} className="btn-ghost" style={{ fontSize:12, padding:"6px 14px" }}>Sign Out</button>
-          <button onClick={onLogout} className="btn-ghost" style={{ fontSize:12, padding:"6px 14px" }}>← Login Page</button>
-        </div>
-      </div>
-      <div style={{ padding:"32px", maxWidth:1100, margin:"0 auto" }}>
-        <div style={{ display:"flex", gap:10, marginBottom:28 }}>
-          <button onClick={() => setTab("browse")} className={tab === "browse" ? "btn-primary" : "btn-ghost"} style={{ padding:"9px 22px", fontSize:13 }}>🛍 Browse Products</button>
-          <button onClick={() => { setTab("orders"); refreshOrders(); }} className={tab === "orders" ? "btn-primary" : "btn-ghost"} style={{ padding:"9px 22px", fontSize:13 }}>
-            📋 My Orders {orders.length > 0 && `(${orders.length})`}
-          </button>
-        </div>
-        {tab === "browse" && (
-          <div>
-            <div style={{ marginBottom:24 }}>
-              <div style={{ fontFamily:"var(--font-head)", fontSize:22, fontWeight:700, marginBottom:6 }}>Available Products</div>
-              <div style={{ color:"var(--muted)", fontSize:13 }}>Select a product to send a request to admin</div>
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
-              {products.map(p => {
-                const grad = catGrad[p.Category] || "#6c3fd5,#e040c8";
-                return (
-                  <Card3D key={p.ProductID} gradient={grad} style={{ padding:22 }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
-                      <IdBadge id={p.ProductID} />
-                      <span style={{ background:"rgba(255,255,255,0.1)", color:"var(--muted)", border:"1px solid rgba(255,255,255,0.15)", padding:"3px 10px", borderRadius:20, fontSize:11 }}>{p.Category}</span>
-                    </div>
-                    <div style={{ fontFamily:"var(--font-head)", fontSize:17, fontWeight:600, marginBottom:10 }}>{p.ProductName}</div>
-                    <div style={{ fontFamily:"var(--font-head)", fontSize:22, fontWeight:700, background:`linear-gradient(135deg,${grad})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", marginBottom:16 }}>₹{parseFloat(p.UnitPrice).toLocaleString()}</div>
-                    <button onClick={() => handleRequest(p)} disabled={requesting === p.ProductID} style={{ width:"100%", background:`linear-gradient(135deg,${grad})`, border:"none", borderRadius:10, color:"#fff", fontFamily:"var(--font-body)", fontSize:13, fontWeight:600, padding:"10px", cursor:"pointer", opacity: requesting === p.ProductID ? 0.6 : 1 }}>
-                      {requesting === p.ProductID ? "Sending..." : "Request Product →"}
-                    </button>
-                  </Card3D>
-                );
-              })}
-            </div>
-          </div>
-        )}
-        {tab === "orders" && (
-          <div>
-            <div style={{ marginBottom:24 }}>
-              <div style={{ fontFamily:"var(--font-head)", fontSize:22, fontWeight:700, marginBottom:6 }}>My Order History</div>
-              <div style={{ color:"var(--muted)", fontSize:13 }}>Track the status of your product requests</div>
-            </div>
-            {orders.length === 0 ? (
-              <GlassCard style={{ padding:0 }}>
-                <EmptyState icon="📋" title="No orders yet" sub="Browse products and send a request to get started." action={() => setTab("browse")} actionLabel="Browse Products" />
-              </GlassCard>
-            ) : (
-              <GlassCard style={{ padding:0, overflow:"hidden" }}>
-                <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
-                  <TableHeader cols={["OrderID","Date","Product","Bill","Status"]} />
-                  <tbody>
-                    {orders.slice().reverse().map(o => (
-                      <tr key={o.OrderID} className="trow" style={{ borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                        <td style={{ padding:"13px 18px" }}><IdBadge id={o.OrderID} /></td>
-                        <td style={{ padding:"13px 18px", color:"var(--muted)" }}>{o.OrderDate}</td>
-                        <td style={{ padding:"13px 18px" }}><span style={{ background:"rgba(108,63,213,0.15)", color:"#b794f4", border:"1px solid rgba(108,63,213,0.3)", padding:"3px 10px", borderRadius:20, fontSize:11 }}>{o.ProductID}</span></td>
-                        <td style={{ padding:"13px 18px", fontWeight:700, color:"#f6ad55" }}>₹{parseFloat(o.Bill).toLocaleString()}</td>
-                        <td style={{ padding:"13px 18px" }}><StatusBadge status={o.Status} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </GlassCard>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
   );
 };
 
@@ -566,7 +393,7 @@ const LandingPage = ({ onEnter }) => {
 };
 
 // ══ LOGIN ══════════════════════════════════════════════════════════════════════
-const LoginPage = ({ onLogin }) => {
+const LoginPage = ({ onLogin, onCustomerPortal }) => {
   const [form, setForm] = useState({ username:"", password:"" });
   const [err, setErr]   = useState("");
   const [loading, setLoading] = useState(false);
@@ -594,7 +421,283 @@ const LoginPage = ({ onLogin }) => {
           {err && <div style={{ background:"rgba(255,107,107,0.12)", border:"1px solid rgba(255,107,107,0.25)", borderRadius:10, padding:"10px 14px", color:"#ff6b6b", fontSize:13, marginBottom:16 }}>{err}</div>}
           <button className="btn-primary" onClick={handle} style={{ width:"100%", padding:"13px", fontSize:15, borderRadius:12 }}>{loading?"Signing in...":"Sign In →"}</button>
           <div style={{ textAlign:"center", marginTop:14, color:"var(--muted)", fontSize:12 }}>Demo: admin / admin123</div>
+
+          <div style={{ display:"flex", alignItems:"center", gap:12, margin:"22px 0 18px" }}>
+            <div style={{ flex:1, height:1, background:"rgba(255,255,255,0.1)" }} />
+            <span style={{ fontSize:12, color:"var(--muted)", letterSpacing:1 }}>OR</span>
+            <div style={{ flex:1, height:1, background:"rgba(255,255,255,0.1)" }} />
+          </div>
+          <button className="btn-teal" onClick={onCustomerPortal} style={{ width:"100%", padding:"13px", fontSize:15, borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+            🛒 Customer Portal →
+          </button>
+          <div style={{ textAlign:"center", marginTop:10, color:"var(--muted)", fontSize:12 }}>Enter with your Customer ID (e.g. C001)</div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// ══ CUSTOMER PORTAL ══════════════════════════════════════════════════════════
+const CustomerPortal = ({ onBack }) => {
+  const [step, setStep]       = useState("login"); // login | portal
+  const [customerId, setCustomerId] = useState("");
+  const [customer, setCustomer]     = useState(null);
+  const [loginErr, setLoginErr]     = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [tab, setTab]         = useState("products"); // products | orders
+  const [products, setProducts]     = useState([]);
+  const [myOrders, setMyOrders]     = useState([]);
+  const [allOrders, setAllOrders]   = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [loadingOrders, setLoadingOrders]     = useState(false);
+  const [requesting, setRequesting]           = useState(null);
+
+  const handleLogin = async () => {
+    if (!customerId.trim()) { setLoginErr("Please enter your Customer ID."); return; }
+    setLoginLoading(true);
+    setLoginErr("");
+    try {
+      const customers = await apiFetch('/customers');
+      const found = customers.find(c => c.CustomerID.toLowerCase() === customerId.trim().toLowerCase());
+      if (!found) {
+        setLoginErr("Customer ID not found. Please check and try again.");
+        setLoginLoading(false);
+        return;
+      }
+      setCustomer(found);
+      setStep("portal");
+      loadProducts();
+      loadOrders(found.CustomerID);
+    } catch {
+      setLoginErr("Connection error. Please try again.");
+      setLoginLoading(false);
+    }
+  };
+
+  const loadProducts = () => {
+    setLoadingProducts(true);
+    apiFetch('/products').then(p => { setProducts(p); setLoadingProducts(false); });
+  };
+
+  const loadOrders = (cid) => {
+    setLoadingOrders(true);
+    Promise.all([apiFetch('/orders'), apiFetch('/products')]).then(([orders, prods]) => {
+      setAllOrders(prods);
+      const mine = orders.filter(o => o.CustomerID === (cid || customer?.CustomerID));
+      const enriched = mine.map(o => ({ ...o, productName: prods.find(p => p.ProductID === o.ProductID)?.ProductName || o.ProductID }));
+      setMyOrders(enriched.reverse());
+      setLoadingOrders(false);
+    });
+  };
+
+  const requestProduct = async (product) => {
+    setRequesting(product.ProductID);
+    try {
+      const orders = await apiFetch('/orders');
+      const newId = "ORD" + String(orders.length + 1).padStart(3, "0");
+      await apiPost('/orders', {
+        OrderID: newId,
+        OrderDate: new Date().toISOString().split("T")[0],
+        Bill: parseFloat(product.UnitPrice),
+        CustomerID: customer.CustomerID,
+        ProductID: product.ProductID,
+        Status: "Pending",
+      });
+      showToast(`Request sent for "${product.ProductName}"! Admin will review it.`);
+      loadOrders(customer.CustomerID);
+      setTab("orders");
+    } catch {
+      showToast("Failed to send request. Please try again.", "error");
+    }
+    setRequesting(null);
+  };
+
+  const catGrad = { Machinery:"#6c3fd5,#4fd1c5", "Raw Materials":"#4fd1c5,#6c3fd5", Components:"#e040c8,#6c3fd5", Packaging:"#f6ad55,#e040c8" };
+  const grads = ["#6c3fd5,#e040c8","#e040c8,#ff6b6b","#4fd1c5,#6c3fd5","#f6ad55,#e040c8","#ff6b6b,#f6ad55","#6c3fd5,#4fd1c5"];
+
+  // ── LOGIN STEP ──
+  if (step === "login") {
+    return (
+      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", zIndex:1 }}>
+        <div className="fade-up" style={{ width:400 }}>
+          <div style={{ textAlign:"center", marginBottom:36 }}>
+            <div style={{ width:72, height:72, margin:"0 auto 16px", background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)", borderRadius:20, display:"flex", alignItems:"center", justifyContent:"center", fontSize:34, boxShadow:"0 0 40px rgba(79,209,197,0.5)" }}>🛒</div>
+            <div style={{ fontFamily:"var(--font-head)", fontSize:28, fontWeight:700 }}>Customer Portal</div>
+            <div style={{ color:"var(--muted)", fontSize:12, letterSpacing:2, marginTop:6 }}>CHAINSYNC · CUSTOMER ACCESS</div>
+          </div>
+          <div className="glass" style={{ padding:32, borderRadius:24, position:"relative" }}>
+            <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(90deg,#4fd1c5,#6c3fd5,#e040c8)", borderRadius:"24px 24px 0 0" }} />
+            <div style={{ marginBottom:22 }}>
+              <Label>YOUR CUSTOMER ID</Label>
+              <GlassInput
+                placeholder="e.g. C001, C002, C003..."
+                value={customerId}
+                onChange={e => setCustomerId(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleLogin()}
+                style={{ fontSize:16, padding:"13px 16px" }}
+              />
+              <div style={{ fontSize:11, color:"var(--muted)", marginTop:8 }}>
+                Ask your supplier for your Customer ID.
+              </div>
+            </div>
+            {loginErr && (
+              <div style={{ background:"rgba(255,107,107,0.12)", border:"1px solid rgba(255,107,107,0.25)", borderRadius:10, padding:"10px 14px", color:"#ff6b6b", fontSize:13, marginBottom:16 }}>{loginErr}</div>
+            )}
+            <button className="btn-teal" onClick={handleLogin} style={{ width:"100%", padding:"13px", fontSize:15, borderRadius:12 }}>
+              {loginLoading ? "Checking..." : "Enter Portal →"}
+            </button>
+            <button onClick={onBack} style={{ width:"100%", marginTop:12, background:"transparent", border:"none", color:"var(--muted)", fontSize:13, cursor:"pointer", padding:"8px" }}>
+              ← Back to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── PORTAL STEP ──
+  return (
+    <div style={{ minHeight:"100vh", position:"relative", zIndex:1 }}>
+      {/* Header */}
+      <div style={{ background:"rgba(10,0,21,0.7)", backdropFilter:"blur(24px)", borderBottom:"1px solid rgba(255,255,255,0.08)", padding:"18px 40px", display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, zIndex:100 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+          <div style={{ width:38, height:38, background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)", borderRadius:11, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🛒</div>
+          <div>
+            <div style={{ fontFamily:"var(--font-head)", fontSize:17, fontWeight:700 }}>Customer Portal</div>
+            <div style={{ fontSize:11, color:"var(--muted)", letterSpacing:1 }}>CHAINSYNC</div>
+          </div>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+          <div style={{ textAlign:"right" }}>
+            <div style={{ fontSize:14, fontWeight:600 }}>{customer?.CustomerName}</div>
+            <div style={{ fontSize:11, color:"#4fd1c5" }}>{customer?.CustomerID}</div>
+          </div>
+          <div style={{ width:40, height:40, background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>
+            {customer?.CustomerName?.charAt(0) || "?"}
+          </div>
+          <button onClick={onBack} style={{ background:"rgba(255,107,107,0.1)", border:"1px solid rgba(255,107,107,0.2)", color:"#ff6b6b", cursor:"pointer", borderRadius:9, padding:"7px 14px", fontSize:13, fontFamily:"var(--font-body)", fontWeight:500 }}>Sign Out</button>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:1100, margin:"0 auto", padding:"36px 40px" }}>
+        {/* Welcome */}
+        <div className="fade-up" style={{ marginBottom:32 }}>
+          <div style={{ fontFamily:"var(--font-head)", fontSize:26, fontWeight:700, marginBottom:6 }}>
+            Welcome back, {customer?.CustomerName?.split(" ")[0]}! 👋
+          </div>
+          <div style={{ color:"var(--muted)", fontSize:14 }}>Browse products and request what you need — your requests go directly to our team.</div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display:"flex", gap:8, marginBottom:28 }}>
+          {[
+            { id:"products", label:"🛍 Browse Products" },
+            { id:"orders",   label:`📋 My Orders ${myOrders.length > 0 ? `(${myOrders.length})` : ""}` },
+          ].map(t => (
+            <button key={t.id} onClick={() => { setTab(t.id); if(t.id==="orders") loadOrders(customer.CustomerID); }}
+              className={tab === t.id ? "btn-primary" : "btn-ghost"}
+              style={{ padding:"10px 22px", fontSize:14, borderRadius:12 }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* PRODUCTS TAB */}
+        {tab === "products" && (
+          <div className="fade-up">
+            {loadingProducts ? (
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
+                {[1,2,3,4,5,6].map(i => <SkeletonCard key={i} h={200} />)}
+              </div>
+            ) : (
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
+                {products.map((p, i) => {
+                  const grad = catGrad[p.Category] || grads[i % 6];
+                  const isRequesting = requesting === p.ProductID;
+                  return (
+                    <div key={p.ProductID} className="glass" style={{ padding:22, position:"relative", overflow:"hidden", transition:"transform 0.3s", borderRadius:18 }}>
+                      <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,${grad})`, borderRadius:"18px 18px 0 0" }} />
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
+                        <IdBadge id={p.ProductID} />
+                        <span style={{ background:"rgba(255,255,255,0.08)", color:"var(--muted)", border:"1px solid rgba(255,255,255,0.12)", padding:"3px 10px", borderRadius:20, fontSize:11 }}>{p.Category}</span>
+                      </div>
+                      <div style={{ fontFamily:"var(--font-head)", fontSize:17, fontWeight:600, marginBottom:8, lineHeight:1.3 }}>{p.ProductName}</div>
+                      <div style={{ fontFamily:"var(--font-head)", fontSize:24, fontWeight:700, background:`linear-gradient(135deg,${grad})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", marginBottom:18 }}>
+                        ₹{parseFloat(p.UnitPrice).toLocaleString()}
+                      </div>
+                      <button
+                        onClick={() => requestProduct(p)}
+                        disabled={isRequesting}
+                        style={{
+                          width:"100%", padding:"10px", fontSize:13, fontWeight:600,
+                          background: isRequesting ? "rgba(255,255,255,0.05)" : `linear-gradient(135deg,${grad})`,
+                          border:"none", borderRadius:10, color:"#fff", cursor: isRequesting ? "not-allowed" : "pointer",
+                          fontFamily:"var(--font-body)", transition:"opacity 0.2s",
+                          opacity: isRequesting ? 0.6 : 1,
+                          boxShadow: isRequesting ? "none" : `0 4px 16px ${grad.split(',')[0]}44`,
+                        }}>
+                        {isRequesting ? "Sending Request..." : "Request This Product →"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* MY ORDERS TAB */}
+        {tab === "orders" && (
+          <div className="fade-up">
+            {loadingOrders ? (
+              <GlassCard style={{ padding:0, overflow:"hidden" }}>
+                <table style={{ width:"100%", borderCollapse:"collapse" }}>
+                  <tbody>{[1,2,3].map(i => <SkeletonRow key={i} />)}</tbody>
+                </table>
+              </GlassCard>
+            ) : myOrders.length === 0 ? (
+              <GlassCard style={{ padding:0 }}>
+                <EmptyState
+                  icon="🛍"
+                  title="No orders yet"
+                  sub="Browse the products tab and request something — it will show up here!"
+                  action={() => setTab("products")}
+                  actionLabel="Browse Products →"
+                />
+              </GlassCard>
+            ) : (
+              <GlassCard style={{ padding:0, overflow:"hidden" }}>
+                <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                  <TableHeader cols={["Order ID","Product","Date","Amount","Status"]} />
+                  <tbody>
+                    {myOrders.map(o => (
+                      <tr key={o.OrderID} className="trow" style={{ borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                        <td style={{ padding:"14px 18px" }}><IdBadge id={o.OrderID} /></td>
+                        <td style={{ padding:"14px 18px", fontWeight:600 }}>{o.productName}</td>
+                        <td style={{ padding:"14px 18px", color:"var(--muted)" }}>{o.OrderDate}</td>
+                        <td style={{ padding:"14px 18px", fontWeight:700, background:"linear-gradient(135deg,#e040c8,#f6ad55)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
+                          ₹{parseFloat(o.Bill).toLocaleString()}
+                        </td>
+                        <td style={{ padding:"14px 18px" }}>
+                          <StatusBadge status={o.Status} />
+                          {o.Status === "Pending" && (
+                            <div style={{ fontSize:10, color:"var(--muted)", marginTop:4 }}>Awaiting admin review</div>
+                          )}
+                          {o.Status === "Accepted" && (
+                            <div style={{ fontSize:10, color:"#4fd1c5", marginTop:4 }}>Your request was approved!</div>
+                          )}
+                          {o.Status === "Rejected" && (
+                            <div style={{ fontSize:10, color:"#ff6b6b", marginTop:4 }}>Request was declined</div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </GlassCard>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1229,7 +1332,6 @@ const Orders = () => {
 
   const blank = { OrderID:"", OrderDate:new Date().toISOString().split("T")[0], Bill:0, CustomerID:"", ProductID:"", Status:"Accepted" };
 
-  // ── CHANGE 1: save includes Status ──
   const save = async () => {
     try {
       if (modal==="add") await apiPost('/orders', {...form, Status: form.Status||"Accepted"});
@@ -1260,7 +1362,6 @@ const Orders = () => {
     <div className="fade-up">
       <PageHeader crumb="ORDERS" title="Orders" sub={`${data.length} total orders${pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`} action={addBtn} />
 
-      {/* Status filter tabs */}
       <div style={{ display:"flex", gap:8, marginBottom:16 }}>
         {["All","Accepted","Pending","Rejected"].map(f => (
           <button key={f} onClick={()=>setStatusFilter(f)}
@@ -1283,7 +1384,6 @@ const Orders = () => {
       ) : (
         <GlassCard style={{ padding:0, overflow:"hidden" }}>
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
-            {/* ── CHANGE 2: Status column added ── */}
             <TableHeader cols={["OrderID","Date","Bill","Customer","Product","Status","Actions"]} />
             <tbody>
               {filtered.map(o => {
@@ -1300,7 +1400,6 @@ const Orders = () => {
                         {prod?.ProductName||o.ProductID||"—"}
                       </span>
                     </td>
-                    {/* ── CHANGE 3: Status badge column ── */}
                     <td style={{ padding:"13px 16px" }}>
                       <StatusBadge status={o.Status} />
                     </td>
@@ -1346,7 +1445,6 @@ const Orders = () => {
             </div>
             <div><Label>ORDER DATE</Label><GlassInput type="date" value={form.OrderDate||""} onChange={e=>setForm({...form,OrderDate:e.target.value})} /></div>
             <div><Label>BILL (₹)</Label><GlassInput type="number" value={form.Bill||0} onChange={e=>setForm({...form,Bill:+e.target.value})} /></div>
-            {/* ── CHANGE 4: Status dropdown in modal ── */}
             <div><Label>STATUS</Label>
               <GlassSelect value={form.Status||"Accepted"} onChange={e=>setForm({...form,Status:e.target.value})} style={{width:"100%"}}>
                 <option value="Accepted">Accepted</option>
@@ -1519,8 +1617,11 @@ export default function App() {
   }, [screen, page]);
 
   const Bg = () => <><div className="mesh-bg"/><div className="orb orb1"/><div className="orb orb2"/><div className="orb orb3"/></>;
+
   if (screen === "landing") return <><Bg/><LandingPage onEnter={() => setScreen("login")}/></>;
-  if (screen === "login")   return <><Bg/><LoginPage   onLogin={() => setScreen("app")}/></>;
+  if (screen === "login")   return <><Bg/><LoginPage onLogin={() => setScreen("app")} onCustomerPortal={() => setScreen("customer")} /></>;
+  if (screen === "customer") return <><ToastContainer/><Bg/><CustomerPortal onBack={() => setScreen("login")} /></>;
+
   const Page = PAGES[page];
   return (
     <>
