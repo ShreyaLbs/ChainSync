@@ -242,6 +242,180 @@ const StatusBadge = ({ status }) => {
     <span style={{ background:st.bg, color:st.color, border:st.border, padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600 }}>{s}</span>
   );
 };
+// ══ CUSTOMER PORTAL ═══════════════════════════════════════════════════════════
+const CustomerPortal = ({ onLogout }) => {
+  const [customer, setCustomer] = useState(null);
+  const [customerId, setCustomerId] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [tab, setTab] = useState("browse");
+  const [requesting, setRequesting] = useState(null);
+ 
+  const handleLogin = async () => {
+    if (!customerId.trim()) { setErr("Please enter your Customer ID"); return; }
+    setLoading(true);
+    setErr("");
+    try {
+      const customers = await apiFetch('/customers');
+      const found = customers.find(c => c.CustomerID.toLowerCase() === customerId.trim().toLowerCase());
+      if (found) {
+        setCustomer(found);
+        const [prods, ords] = await Promise.all([apiFetch('/products'), apiFetch('/orders')]);
+        setProducts(prods);
+        setOrders(ords.filter(o => o.CustomerID === found.CustomerID));
+      } else {
+        setErr("Customer ID not found. Try C001, C002, C003...");
+      }
+    } catch {
+      setErr("Connection error. Please try again.");
+    }
+    setLoading(false);
+  };
+ 
+  const handleRequest = async (product) => {
+    setRequesting(product.ProductID);
+    try {
+      const allOrders = await apiFetch('/orders');
+      const newId = "ORD" + String(allOrders.length + 1).padStart(3, "0");
+      await apiPost('/orders', {
+        OrderID: newId,
+        OrderDate: new Date().toISOString().split("T")[0],
+        Bill: parseFloat(product.UnitPrice),
+        CustomerID: customer.CustomerID,
+        ProductID: product.ProductID,
+        Status: "Pending"
+      });
+      showToast(`Request for "${product.ProductName}" sent to admin!`);
+      const updatedOrders = await apiFetch('/orders');
+      setOrders(updatedOrders.filter(o => o.CustomerID === customer.CustomerID));
+      setTab("orders");
+    } catch {
+      showToast("Failed to send request.", "error");
+    }
+    setRequesting(null);
+  };
+ 
+  const refreshOrders = async () => {
+    if (!customer) return;
+    const updatedOrders = await apiFetch('/orders');
+    setOrders(updatedOrders.filter(o => o.CustomerID === customer.CustomerID));
+  };
+ 
+  const catGrad = { Machinery:"#6c3fd5,#4fd1c5", "Raw Materials":"#4fd1c5,#6c3fd5", Components:"#e040c8,#6c3fd5", Packaging:"#f6ad55,#e040c8" };
+ 
+  if (!customer) {
+    return (
+      <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", zIndex:1 }}>
+        <div className="fade-up" style={{ width:420 }}>
+          <div style={{ textAlign:"center", marginBottom:36 }}>
+            <div style={{ width:72, height:72, margin:"0 auto 16px", background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)", borderRadius:20, display:"flex", alignItems:"center", justifyContent:"center", fontSize:34, boxShadow:"0 0 40px rgba(79,209,197,0.5)" }}>🛒</div>
+            <div style={{ fontFamily:"var(--font-head)", fontSize:32, fontWeight:700, letterSpacing:-1 }}>Customer<span style={{ background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}> Portal</span></div>
+            <div style={{ color:"var(--muted)", fontSize:12, letterSpacing:3, marginTop:4 }}>CHAINSYNC · REQUEST PRODUCTS</div>
+          </div>
+          <div className="glass" style={{ padding:32, borderRadius:24, position:"relative" }}>
+            <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(90deg,#4fd1c5,#6c3fd5,#e040c8)", borderRadius:"24px 24px 0 0" }} />
+            <div style={{ marginBottom:22 }}>
+              <Label>CUSTOMER ID</Label>
+              <GlassInput placeholder="e.g. C001, C002, C003..." value={customerId} onChange={e => setCustomerId(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} />
+              <div style={{ fontSize:11, color:"var(--muted)", marginTop:6 }}>Enter your Customer ID to access the portal</div>
+            </div>
+            {err && <div style={{ background:"rgba(255,107,107,0.12)", border:"1px solid rgba(255,107,107,0.25)", borderRadius:10, padding:"10px 14px", color:"#ff6b6b", fontSize:13, marginBottom:16 }}>{err}</div>}
+            <button className="btn-primary" onClick={handleLogin} style={{ width:"100%", padding:"13px", fontSize:15, borderRadius:12, background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)" }}>
+              {loading ? "Signing in..." : "Access Portal →"}
+            </button>
+            <button onClick={onLogout} style={{ width:"100%", marginTop:12, background:"transparent", border:"none", color:"var(--muted)", fontSize:13, cursor:"pointer", fontFamily:"var(--font-body)" }}>← Back to Login</button>
+            <div style={{ textAlign:"center", marginTop:14, color:"var(--muted)", fontSize:12 }}>Try: C001, C002, C003, C004, or C005</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+ 
+  return (
+    <div style={{ minHeight:"100vh", position:"relative", zIndex:1 }}>
+      <div style={{ background:"rgba(10,0,21,0.8)", backdropFilter:"blur(24px)", borderBottom:"1px solid rgba(255,255,255,0.08)", padding:"16px 32px", display:"flex", justifyContent:"space-between", alignItems:"center", position:"sticky", top:0, zIndex:100 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <div style={{ width:38, height:38, background:"linear-gradient(135deg,#4fd1c5,#6c3fd5)", borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🛒</div>
+          <div>
+            <div style={{ fontFamily:"var(--font-head)", fontSize:16, fontWeight:700 }}>Customer Portal</div>
+            <div style={{ fontSize:11, color:"var(--muted)" }}>Welcome, {customer.CustomerName}</div>
+          </div>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <IdBadge id={customer.CustomerID} />
+          <button onClick={() => { setCustomer(null); setCustomerId(""); }} className="btn-ghost" style={{ fontSize:12, padding:"6px 14px" }}>Sign Out</button>
+          <button onClick={onLogout} className="btn-ghost" style={{ fontSize:12, padding:"6px 14px" }}>← Login Page</button>
+        </div>
+      </div>
+      <div style={{ padding:"32px", maxWidth:1100, margin:"0 auto" }}>
+        <div style={{ display:"flex", gap:10, marginBottom:28 }}>
+          <button onClick={() => setTab("browse")} className={tab === "browse" ? "btn-primary" : "btn-ghost"} style={{ padding:"9px 22px", fontSize:13 }}>🛍 Browse Products</button>
+          <button onClick={() => { setTab("orders"); refreshOrders(); }} className={tab === "orders" ? "btn-primary" : "btn-ghost"} style={{ padding:"9px 22px", fontSize:13 }}>
+            📋 My Orders {orders.length > 0 && `(${orders.length})`}
+          </button>
+        </div>
+        {tab === "browse" && (
+          <div>
+            <div style={{ marginBottom:24 }}>
+              <div style={{ fontFamily:"var(--font-head)", fontSize:22, fontWeight:700, marginBottom:6 }}>Available Products</div>
+              <div style={{ color:"var(--muted)", fontSize:13 }}>Select a product to send a request to admin</div>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
+              {products.map(p => {
+                const grad = catGrad[p.Category] || "#6c3fd5,#e040c8";
+                return (
+                  <Card3D key={p.ProductID} gradient={grad} style={{ padding:22 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}>
+                      <IdBadge id={p.ProductID} />
+                      <span style={{ background:"rgba(255,255,255,0.1)", color:"var(--muted)", border:"1px solid rgba(255,255,255,0.15)", padding:"3px 10px", borderRadius:20, fontSize:11 }}>{p.Category}</span>
+                    </div>
+                    <div style={{ fontFamily:"var(--font-head)", fontSize:17, fontWeight:600, marginBottom:10 }}>{p.ProductName}</div>
+                    <div style={{ fontFamily:"var(--font-head)", fontSize:22, fontWeight:700, background:`linear-gradient(135deg,${grad})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", marginBottom:16 }}>₹{parseFloat(p.UnitPrice).toLocaleString()}</div>
+                    <button onClick={() => handleRequest(p)} disabled={requesting === p.ProductID} style={{ width:"100%", background:`linear-gradient(135deg,${grad})`, border:"none", borderRadius:10, color:"#fff", fontFamily:"var(--font-body)", fontSize:13, fontWeight:600, padding:"10px", cursor:"pointer", opacity: requesting === p.ProductID ? 0.6 : 1 }}>
+                      {requesting === p.ProductID ? "Sending..." : "Request Product →"}
+                    </button>
+                  </Card3D>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {tab === "orders" && (
+          <div>
+            <div style={{ marginBottom:24 }}>
+              <div style={{ fontFamily:"var(--font-head)", fontSize:22, fontWeight:700, marginBottom:6 }}>My Order History</div>
+              <div style={{ color:"var(--muted)", fontSize:13 }}>Track the status of your product requests</div>
+            </div>
+            {orders.length === 0 ? (
+              <GlassCard style={{ padding:0 }}>
+                <EmptyState icon="📋" title="No orders yet" sub="Browse products and send a request to get started." action={() => setTab("browse")} actionLabel="Browse Products" />
+              </GlassCard>
+            ) : (
+              <GlassCard style={{ padding:0, overflow:"hidden" }}>
+                <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                  <TableHeader cols={["OrderID","Date","Product","Bill","Status"]} />
+                  <tbody>
+                    {orders.slice().reverse().map(o => (
+                      <tr key={o.OrderID} className="trow" style={{ borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                        <td style={{ padding:"13px 18px" }}><IdBadge id={o.OrderID} /></td>
+                        <td style={{ padding:"13px 18px", color:"var(--muted)" }}>{o.OrderDate}</td>
+                        <td style={{ padding:"13px 18px" }}><span style={{ background:"rgba(108,63,213,0.15)", color:"#b794f4", border:"1px solid rgba(108,63,213,0.3)", padding:"3px 10px", borderRadius:20, fontSize:11 }}>{o.ProductID}</span></td>
+                        <td style={{ padding:"13px 18px", fontWeight:700, color:"#f6ad55" }}>₹{parseFloat(o.Bill).toLocaleString()}</td>
+                        <td style={{ padding:"13px 18px" }}><StatusBadge status={o.Status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </GlassCard>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 // ══ LANDING PAGE ════════════════════════════════════════════════════════════════
 const LANDING_TARGETS = { suppliers: 6, products: 6, orders: 20, warehouses: 4 };
