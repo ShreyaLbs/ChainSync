@@ -300,6 +300,16 @@ def fix_orders():
     conn.commit()
     cursor.close(); conn.close()
     return jsonify({'message': 'Orders updated with different products!'})
+@app.route('/api/orders/<oid>/status', methods=['PATCH'])
+def update_order_status(oid):
+    d = request.json
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE orders SET Status=%s WHERE OrderID=%s
+    """, (d['Status'], oid))
+    conn.commit(); cursor.close(); conn.close()
+    return jsonify({'message': 'Order status updated'})
 
 # ══════════════════════════════════════════════════════
 #  RUN
