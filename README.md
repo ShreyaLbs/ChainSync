@@ -21,7 +21,7 @@ Manage suppliers, products, warehouses, inventory, customers, and orders — all
 | Service | URL |
 |--------|-----|
 | 🖥️ Frontend (Vercel) | https://chain-sync-nine.vercel.app |
-| 🗄️ Database | Railway MySQL (cloud-hosted) |
+| 🗄️ Database | FreeSQLDatabase MySQL (cloud-hosted) |
 
 ---
 
