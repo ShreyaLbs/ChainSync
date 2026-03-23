@@ -1339,12 +1339,15 @@ const Orders = () => {
     } catch { showToast('Failed to save order.', 'error'); }
   };
 
-  const updateStatus = async (oid, status) => {
-    const order = data.find(o => o.OrderID === oid);
-    await apiPut(`/orders/${oid}`, {...order, Status: status});
+ const updateStatus = async (oid, status) => {
+    await fetch(`${API}/orders/${oid}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Status: status })
+    });
     showToast(`Order ${oid} ${status}!`);
     load();
-  };
+};
 
   const filtered = data.filter(o => {
     const c = customers.find(x=>x.CustomerID===o.CustomerID);
