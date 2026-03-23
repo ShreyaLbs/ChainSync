@@ -38,7 +38,7 @@ Manage suppliers, products, warehouses, inventory, customers, and orders — all
 | **Frontend** | React.js, Recharts, CSS Glass UI |
 | **Backend** | Python, Flask, Flask-CORS |
 | **Database** | MySQL (hosted on Railway) |
-| **Deployment** | Vercel (frontend), Railway (backend + DB) |
+| **Deployment** | Vercel (frontend), Render (backend),FreeSQLDatabase(DB) |
 
 ---
 
