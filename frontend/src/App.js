@@ -114,11 +114,7 @@ globalStyle.textContent = `
     background:rgba(108,63,213,0.4);
     box-shadow:0 0 12px rgba(108,63,213,0.4);
   }
-  @media print {
-    body > * { display: none !important; }
-    #chainsync-invoice-print { display: block !important; position:fixed; inset:0; background:#fff; z-index:99999; }
-  }
-  #chainsync-invoice-print { display: none; }
+
 `;
 document.head.appendChild(globalStyle);
 
@@ -273,13 +269,16 @@ const InvoiceModal = ({ order, customer, product, onClose }) => {
   })();
 
   const handlePrint = () => {
-    const printDiv = document.getElementById("chainsync-invoice-print");
     const content = document.getElementById("chainsync-invoice-content");
-    if (printDiv && content) {
-      printDiv.innerHTML = content.innerHTML;
-      window.print();
-      setTimeout(() => { printDiv.innerHTML = ""; }, 1000);
-    }
+    if (!content) return;
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:900px;height:1200px;border:none;";
+    document.body.appendChild(iframe);
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write("<!DOCTYPE html><html><head><meta charset='utf-8'/><link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;600;700;800&display=swap'/><style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}body{background:#fff;font-family:'Cabinet Grotesk',Georgia,sans-serif;color:#111;}@page{margin:15mm;}</style></head><body>" + content.innerHTML + "</body></html>");
+    doc.close();
+    iframe.onload = () => { setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); setTimeout(() => document.body.removeChild(iframe), 1500); }, 500); };
   };
 
   const statusColor = order.Status === "Accepted" ? "#4fd1c5" : order.Status === "Rejected" ? "#ff6b6b" : "#f6ad55";
@@ -287,7 +286,6 @@ const InvoiceModal = ({ order, customer, product, onClose }) => {
 
   return (
     <>
-      <div id="chainsync-invoice-print" />
       <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:2000, padding:20 }} onClick={e => { if(e.target === e.currentTarget) onClose(); }}>
         <div className="glass fade-up" style={{ width:660, maxWidth:"95vw", maxHeight:"92vh", borderRadius:24, overflow:"hidden", display:"flex", flexDirection:"column" }}>
           {/* Modal Header */}
