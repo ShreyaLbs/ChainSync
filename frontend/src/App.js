@@ -103,6 +103,22 @@ globalStyle.textContent = `
   .recharts-cartesian-grid-horizontal line,
   .recharts-cartesian-grid-vertical line { stroke:rgba(255,255,255,0.06) !important; }
   .recharts-text { fill:rgba(240,240,255,0.5) !important; font-family:'Cabinet Grotesk',sans-serif !important; font-size:11px !important; }
+  .order-id-btn {
+    background:rgba(108,63,213,0.2); color:#b794f4;
+    border:1px solid rgba(108,63,213,0.3); border-radius:6px;
+    padding:2px 8px; font-size:11px; font-weight:600;
+    cursor:pointer; font-family:var(--font-body);
+    transition:background 0.2s, box-shadow 0.2s;
+  }
+  .order-id-btn:hover {
+    background:rgba(108,63,213,0.4);
+    box-shadow:0 0 12px rgba(108,63,213,0.4);
+  }
+  @media print {
+    body > * { display: none !important; }
+    #chainsync-invoice-print { display: block !important; position:fixed; inset:0; background:#fff; z-index:99999; }
+  }
+  #chainsync-invoice-print { display: none; }
 `;
 document.head.appendChild(globalStyle);
 
@@ -241,6 +257,166 @@ const StatusBadge = ({ status }) => {
   const st = styles[s] || styles.Accepted;
   return (
     <span style={{ background:st.bg, color:st.color, border:st.border, padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600 }}>{s}</span>
+  );
+};
+
+// ══ INVOICE MODAL ════════════════════════════════════════════════════════════
+const InvoiceModal = ({ order, customer, product, onClose }) => {
+  const invoiceNum = `INV-${order.OrderID}`;
+  const date = order.OrderDate;
+  const dueDate = (() => {
+    try {
+      const d = new Date(date);
+      d.setDate(d.getDate() + 30);
+      return d.toISOString().split("T")[0];
+    } catch { return "—"; }
+  })();
+
+  const handlePrint = () => {
+    const printDiv = document.getElementById("chainsync-invoice-print");
+    const content = document.getElementById("chainsync-invoice-content");
+    if (printDiv && content) {
+      printDiv.innerHTML = content.innerHTML;
+      window.print();
+      setTimeout(() => { printDiv.innerHTML = ""; }, 1000);
+    }
+  };
+
+  const statusColor = order.Status === "Accepted" ? "#4fd1c5" : order.Status === "Rejected" ? "#ff6b6b" : "#f6ad55";
+  const bill = parseFloat(order.Bill) || 0;
+
+  return (
+    <>
+      <div id="chainsync-invoice-print" />
+      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:2000, padding:20 }} onClick={e => { if(e.target === e.currentTarget) onClose(); }}>
+        <div className="glass fade-up" style={{ width:660, maxWidth:"95vw", maxHeight:"92vh", borderRadius:24, overflow:"hidden", display:"flex", flexDirection:"column" }}>
+          {/* Modal Header */}
+          <div style={{ padding:"18px 26px", borderBottom:"1px solid rgba(255,255,255,0.08)", display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0, background:"rgba(108,63,213,0.08)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <span style={{ fontSize:18 }}>🧾</span>
+              <span style={{ fontFamily:"var(--font-head)", fontSize:17, fontWeight:600 }}>Invoice — {order.OrderID}</span>
+            </div>
+            <div style={{ display:"flex", gap:10 }}>
+              <button className="btn-primary" onClick={handlePrint} style={{ padding:"8px 18px", fontSize:13, display:"flex", alignItems:"center", gap:7, borderRadius:9 }}>
+                🖨 Print
+              </button>
+              <button onClick={onClose} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.12)", color:"var(--muted)", cursor:"pointer", borderRadius:8, width:32, height:32, fontSize:18, display:"flex", alignItems:"center", justifyContent:"center" }}>×</button>
+            </div>
+          </div>
+
+          {/* Scrollable invoice */}
+          <div style={{ overflowY:"auto", flex:1 }}>
+            <div id="chainsync-invoice-content" style={{ padding:40, background:"#ffffff", color:"#111", fontFamily:"'Cabinet Grotesk', Georgia, sans-serif" }}>
+              {/* Gradient top bar */}
+              <div style={{ background:"linear-gradient(90deg,#6c3fd5,#e040c8,#ff6b6b)", height:5, borderRadius:3, marginBottom:36 }} />
+
+              {/* Header: logo + INVOICE */}
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:32 }}>
+                <div>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+                    <div style={{ width:44, height:44, background:"linear-gradient(135deg,#6c3fd5,#e040c8)", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, color:"#fff" }}>⬡</div>
+                    <div style={{ fontFamily:"Georgia, serif", fontSize:24, fontWeight:700, color:"#111", letterSpacing:-0.5 }}>
+                      Chain<span style={{ color:"#e040c8" }}>Sync</span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize:11, color:"#999", letterSpacing:2 }}>SUPPLY CHAIN MANAGEMENT</div>
+                  <div style={{ fontSize:12, color:"#666", marginTop:6 }}>admin@chainsync.in</div>
+                </div>
+                <div style={{ textAlign:"right" }}>
+                  <div style={{ fontFamily:"Georgia, serif", fontSize:36, fontWeight:700, color:"#111", letterSpacing:-1 }}>INVOICE</div>
+                  <div style={{ fontSize:13, color:"#888", marginTop:4, fontWeight:500 }}>#{invoiceNum}</div>
+                  <div style={{ marginTop:10, display:"inline-flex", alignItems:"center", gap:7,
+                    background: order.Status==="Accepted" ? "rgba(79,209,197,0.1)" : order.Status==="Rejected" ? "rgba(255,107,107,0.1)" : "rgba(246,173,85,0.1)",
+                    border:`1.5px solid ${statusColor}55`, borderRadius:20, padding:"5px 14px" }}>
+                    <span style={{ width:7, height:7, borderRadius:"50%", background:statusColor, display:"inline-block" }} />
+                    <span style={{ fontSize:12, fontWeight:700, color:statusColor }}>{order.Status || "Accepted"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dates strip */}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:0, marginBottom:28, border:"1.5px solid #ede9ff", borderRadius:12, overflow:"hidden" }}>
+                {[["Invoice No.", invoiceNum],["Issue Date", date],["Due Date", dueDate]].map(([l,v], idx) => (
+                  <div key={l} style={{ padding:"16px 20px", background: idx===0 ? "#f5f2ff" : "#faf9ff", borderRight: idx < 2 ? "1.5px solid #ede9ff" : "none" }}>
+                    <div style={{ fontSize:10, color:"#9a8fb5", letterSpacing:1.5, marginBottom:5, textTransform:"uppercase" }}>{l}</div>
+                    <div style={{ fontSize:14, fontWeight:700, color:"#2d1d6e" }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bill To + Order Info */}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:28 }}>
+                <div style={{ background:"#f5f2ff", borderRadius:12, padding:"18px 20px", border:"1.5px solid #ede9ff" }}>
+                  <div style={{ fontSize:10, color:"#9a8fb5", letterSpacing:2, marginBottom:10, textTransform:"uppercase" }}>Billed To</div>
+                  <div style={{ fontSize:17, fontWeight:700, color:"#2d1d6e", marginBottom:5 }}>{customer?.CustomerName || order.CustomerID}</div>
+                  <div style={{ fontSize:12, color:"#777", marginBottom:3 }}>ID: <span style={{ fontWeight:600, color:"#555" }}>{order.CustomerID}</span></div>
+                  {customer?.ContactNumber && <div style={{ fontSize:12, color:"#777", marginBottom:3 }}>📞 {customer.ContactNumber}</div>}
+                  {customer?.Address && <div style={{ fontSize:12, color:"#777" }}>📍 {customer.Address}</div>}
+                </div>
+                <div style={{ background:"#f9f8ff", borderRadius:12, padding:"18px 20px", border:"1.5px solid #ede9ff" }}>
+                  <div style={{ fontSize:10, color:"#9a8fb5", letterSpacing:2, marginBottom:10, textTransform:"uppercase" }}>Order Details</div>
+                  {[
+                    ["Order ID", order.OrderID],
+                    ["Order Date", order.OrderDate],
+                    ["Payment Terms", "Net 30"],
+                  ].map(([l,v]) => (
+                    <div key={l} style={{ fontSize:12, color:"#777", marginBottom:5 }}>
+                      {l}: <span style={{ fontWeight:700, color:"#333" }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Line items table */}
+              <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:24, borderRadius:12, overflow:"hidden", border:"1.5px solid #ede9ff" }}>
+                <thead>
+                  <tr style={{ background:"linear-gradient(135deg,#6c3fd5,#e040c8)" }}>
+                    {["#","Product","Category","Unit Price","Qty","Total"].map(h => (
+                      <th key={h} style={{ padding:"13px 16px", textAlign:"left", fontSize:11, letterSpacing:1.5, color:"#fff", fontWeight:700 }}>{h.toUpperCase()}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ background:"#fff" }}>
+                    <td style={{ padding:"18px 16px", fontSize:12, color:"#aaa", borderBottom:"1.5px solid #f0ecff" }}>1</td>
+                    <td style={{ padding:"18px 16px", fontWeight:700, color:"#1a0040", fontSize:14, borderBottom:"1.5px solid #f0ecff" }}>{product?.ProductName || order.ProductID || "—"}</td>
+                    <td style={{ padding:"18px 16px", fontSize:12, color:"#888", borderBottom:"1.5px solid #f0ecff" }}>
+                      {product?.Category ? (
+                        <span style={{ background:"#f0ecff", color:"#6c3fd5", borderRadius:20, padding:"3px 10px", fontSize:11, fontWeight:600 }}>{product.Category}</span>
+                      ) : "—"}
+                    </td>
+                    <td style={{ padding:"18px 16px", fontSize:13, color:"#444", borderBottom:"1.5px solid #f0ecff" }}>₹{product ? parseFloat(product.UnitPrice).toLocaleString() : bill.toLocaleString()}</td>
+                    <td style={{ padding:"18px 16px", fontSize:13, color:"#444", borderBottom:"1.5px solid #f0ecff" }}>1</td>
+                    <td style={{ padding:"18px 16px", fontSize:15, fontWeight:800, color:"#6c3fd5", borderBottom:"1.5px solid #f0ecff" }}>₹{bill.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Totals block */}
+              <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:32 }}>
+                <div style={{ width:290 }}>
+                  {[["Subtotal", `₹${bill.toLocaleString()}`],["Tax (0%)", "₹0"],["Discount", "₹0"]].map(([l,v]) => (
+                    <div key={l} style={{ display:"flex", justifyContent:"space-between", padding:"9px 4px", borderBottom:"1.5px solid #f0ecff", fontSize:13, color:"#666" }}>
+                      <span>{l}</span><span style={{ fontWeight:600 }}>{v}</span>
+                    </div>
+                  ))}
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"15px 18px", background:"linear-gradient(135deg,#6c3fd5,#e040c8)", borderRadius:12, marginTop:12, boxShadow:"0 4px 20px rgba(108,63,213,0.35)" }}>
+                    <span style={{ fontSize:13, fontWeight:700, color:"rgba(255,255,255,0.85)", letterSpacing:1 }}>TOTAL DUE</span>
+                    <span style={{ fontSize:22, fontWeight:800, color:"#fff" }}>₹{bill.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div style={{ borderTop:"2px solid #ede9ff", paddingTop:20, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div style={{ fontSize:11, color:"#bbb" }}>© 2026 ChainSync · Supply Chain Management Platform</div>
+                <div style={{ fontSize:12, color:"#9a8fb5", fontStyle:"italic" }}>Thank you for your business! 🙏</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 
@@ -1306,6 +1482,7 @@ const Orders = () => {
   const [form, setForm]         = useState({});
   const [search, setSearch]     = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [invoiceOrder, setInvoiceOrder] = useState(null); // ← NEW
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1379,7 +1556,12 @@ const Orders = () => {
                 const prod = products.find(p=>p.ProductID===o.ProductID);
                 return (
                   <tr key={o.OrderID} className="trow" style={{ borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                    <td style={{ padding:"13px 16px" }}><IdBadge id={o.OrderID} /></td>
+                    <td style={{ padding:"13px 16px" }}>
+                      {/* Clickable Order ID → opens invoice */}
+                      <button className="order-id-btn" onClick={() => setInvoiceOrder(o)} title="View Invoice">
+                        🧾 {o.OrderID}
+                      </button>
+                    </td>
                     <td style={{ padding:"13px 16px", color:"var(--muted)" }}>{o.OrderDate}</td>
                     <td style={{ padding:"13px 16px", fontWeight:700, background:"linear-gradient(135deg,#e040c8,#f6ad55)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>₹{parseFloat(o.Bill).toLocaleString()}</td>
                     <td style={{ padding:"13px 16px", fontWeight:600 }}>{cust?.CustomerName||o.CustomerID}</td>
@@ -1446,6 +1628,16 @@ const Orders = () => {
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Invoice Modal */}
+      {invoiceOrder && (
+        <InvoiceModal
+          order={invoiceOrder}
+          customer={customers.find(c => c.CustomerID === invoiceOrder.CustomerID)}
+          product={products.find(p => p.ProductID === invoiceOrder.ProductID)}
+          onClose={() => setInvoiceOrder(null)}
+        />
       )}
     </div>
   );
