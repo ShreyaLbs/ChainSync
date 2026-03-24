@@ -288,7 +288,6 @@ const InvoiceModal = ({ order, customer, product, onClose }) => {
     <>
       <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:2000, padding:20 }} onClick={e => { if(e.target === e.currentTarget) onClose(); }}>
         <div className="glass fade-up" style={{ width:660, maxWidth:"95vw", maxHeight:"92vh", borderRadius:24, overflow:"hidden", display:"flex", flexDirection:"column" }}>
-          {/* Modal Header */}
           <div style={{ padding:"18px 26px", borderBottom:"1px solid rgba(255,255,255,0.08)", display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0, background:"rgba(108,63,213,0.08)" }}>
             <div style={{ display:"flex", alignItems:"center", gap:10 }}>
               <span style={{ fontSize:18 }}>🧾</span>
@@ -302,13 +301,10 @@ const InvoiceModal = ({ order, customer, product, onClose }) => {
             </div>
           </div>
 
-          {/* Scrollable invoice */}
           <div style={{ overflowY:"auto", flex:1 }}>
             <div id="chainsync-invoice-content" style={{ padding:40, background:"#ffffff", color:"#111", fontFamily:"'Cabinet Grotesk', Georgia, sans-serif" }}>
-              {/* Gradient top bar */}
               <div style={{ background:"linear-gradient(90deg,#6c3fd5,#e040c8,#ff6b6b)", height:5, borderRadius:3, marginBottom:36 }} />
 
-              {/* Header: logo + INVOICE */}
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:32 }}>
                 <div>
                   <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
@@ -332,7 +328,6 @@ const InvoiceModal = ({ order, customer, product, onClose }) => {
                 </div>
               </div>
 
-              {/* Dates strip */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:0, marginBottom:28, border:"1.5px solid #ede9ff", borderRadius:12, overflow:"hidden" }}>
                 {[["Invoice No.", invoiceNum],["Issue Date", date],["Due Date", dueDate]].map(([l,v], idx) => (
                   <div key={l} style={{ padding:"16px 20px", background: idx===0 ? "#f5f2ff" : "#faf9ff", borderRight: idx < 2 ? "1.5px solid #ede9ff" : "none" }}>
@@ -342,7 +337,6 @@ const InvoiceModal = ({ order, customer, product, onClose }) => {
                 ))}
               </div>
 
-              {/* Bill To + Order Info */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:28 }}>
                 <div style={{ background:"#f5f2ff", borderRadius:12, padding:"18px 20px", border:"1.5px solid #ede9ff" }}>
                   <div style={{ fontSize:10, color:"#9a8fb5", letterSpacing:2, marginBottom:10, textTransform:"uppercase" }}>Billed To</div>
@@ -365,7 +359,6 @@ const InvoiceModal = ({ order, customer, product, onClose }) => {
                 </div>
               </div>
 
-              {/* Line items table */}
               <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:24, borderRadius:12, overflow:"hidden", border:"1.5px solid #ede9ff" }}>
                 <thead>
                   <tr style={{ background:"linear-gradient(135deg,#6c3fd5,#e040c8)" }}>
@@ -390,7 +383,6 @@ const InvoiceModal = ({ order, customer, product, onClose }) => {
                 </tbody>
               </table>
 
-              {/* Totals block */}
               <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:32 }}>
                 <div style={{ width:290 }}>
                   {[["Subtotal", `₹${bill.toLocaleString()}`],["Tax (0%)", "₹0"],["Discount", "₹0"]].map(([l,v]) => (
@@ -405,7 +397,6 @@ const InvoiceModal = ({ order, customer, product, onClose }) => {
                 </div>
               </div>
 
-              {/* Footer */}
               <div style={{ borderTop:"2px solid #ede9ff", paddingTop:20, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                 <div style={{ fontSize:11, color:"#bbb" }}>© 2026 ChainSync · Supply Chain Management Platform</div>
                 <div style={{ fontSize:12, color:"#9a8fb5", fontStyle:"italic" }}>Thank you for your business! 🙏</div>
@@ -1480,7 +1471,7 @@ const Orders = () => {
   const [form, setForm]         = useState({});
   const [search, setSearch]     = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [invoiceOrder, setInvoiceOrder] = useState(null); // ← NEW
+  const [invoiceOrder, setInvoiceOrder] = useState(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1519,11 +1510,11 @@ const Orders = () => {
   });
 
   const pendingCount = data.filter(o => o.Status === "Pending").length;
-  const addBtn = <button className="btn-primary" onClick={()=>{setForm({...blank, CustomerID:customers[0]?.CustomerID||"", ProductID:products[0]?.ProductID||""});setModal("add");}}>+ New Order</button>;
 
   return (
     <div className="fade-up">
-      <PageHeader crumb="ORDERS" title="Orders" sub={`${data.length} total orders${pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`} action={addBtn} />
+      {/* ✅ FIXED: Removed addBtn and action prop — orders come from Customer Portal only */}
+      <PageHeader crumb="ORDERS" title="Orders" sub={`${data.length} total orders${pendingCount > 0 ? ` · ${pendingCount} pending` : ''}`} />
 
       <div style={{ display:"flex", gap:8, marginBottom:16 }}>
         {["All","Accepted","Pending","Rejected"].map(f => (
@@ -1543,7 +1534,14 @@ const Orders = () => {
       {loading ? (
         <GlassCard style={{ padding:0, overflow:"hidden" }}><table style={{ width:'100%', borderCollapse:'collapse' }}><tbody>{[1,2,3].map(i=><SkeletonRow key={i}/>)}</tbody></table></GlassCard>
       ) : filtered.length === 0 ? (
-        <GlassCard style={{ padding:0 }}><EmptyState icon="🛒" title={search ? 'No orders match your search' : 'No orders yet'} sub={search ? 'Try a different keyword.' : 'Place your first order to get started.'} action={search ? null : ()=>{setForm({...blank,CustomerID:customers[0]?.CustomerID||'',ProductID:products[0]?.ProductID||''});setModal('add');}} actionLabel="+ New Order" /></GlassCard>
+        // ✅ FIXED: Removed "Place your first order" CTA — orders come from Customer Portal
+        <GlassCard style={{ padding:0 }}>
+          <EmptyState
+            icon="🛒"
+            title={search ? 'No orders match your search' : 'No orders yet'}
+            sub={search ? 'Try a different keyword.' : 'Orders placed by customers via the Customer Portal will appear here.'}
+          />
+        </GlassCard>
       ) : (
         <GlassCard style={{ padding:0, overflow:"hidden" }}>
           <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
@@ -1555,7 +1553,6 @@ const Orders = () => {
                 return (
                   <tr key={o.OrderID} className="trow" style={{ borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                     <td style={{ padding:"13px 16px" }}>
-                      {/* Clickable Order ID → opens invoice */}
                       <button className="order-id-btn" onClick={() => setInvoiceOrder(o)} title="View Invoice">
                         🧾 {o.OrderID}
                       </button>
@@ -1628,7 +1625,6 @@ const Orders = () => {
         </Modal>
       )}
 
-      {/* Invoice Modal */}
       {invoiceOrder && (
         <InvoiceModal
           order={invoiceOrder}
