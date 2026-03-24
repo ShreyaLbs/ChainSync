@@ -657,7 +657,12 @@ const CustomerPortal = ({ onBack }) => {
     setRequesting(product.ProductID);
     try {
       const orders = await apiFetch('/orders');
-      const newId = "ORD" + String(orders.length + 1).padStart(3, "0");
+      // Find the highest existing order number and increment it to avoid duplicates
+      const maxNum = orders.reduce((max, o) => {
+        const num = parseInt(o.OrderID?.replace(/\D/g, "")) || 0;
+        return num > max ? num : max;
+      }, 0);
+      const newId = "ORD" + String(maxNum + 1).padStart(3, "0");
       await apiPost('/orders', {
         OrderID: newId,
         OrderDate: new Date().toISOString().split("T")[0],
