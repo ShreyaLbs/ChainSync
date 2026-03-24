@@ -386,7 +386,7 @@ const LandingPage = ({ onEnter }) => {
           <div style={{ width:28, height:28, background:"linear-gradient(135deg,#6c3fd5,#e040c8)", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>⬡</div>
           <span style={{ fontFamily:"var(--font-head)", fontWeight:600 }}>Chain<span style={{ background:"linear-gradient(135deg,#e040c8,#ff6b6b)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>Sync</span></span>
         </div>
-        <div>© 2025 ChainSync · Supply Chain Management Platform</div>
+        <div>© 2026 ChainSync · Supply Chain Management Platform</div>
       </footer>
     </div>
   );
